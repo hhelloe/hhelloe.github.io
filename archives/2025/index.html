@@ -1072,6 +1072,48 @@ if (location.pathname !== '/post/') {
                 <mdui-card 
     class="article-card" 
     variant="filled"
+    onclick="location.href='/2026/01/07/Paged%20Attention/'">
+    
+    <div class="article-content">
+        <!-- 封面图片 -->
+        
+        
+        <!-- 内容区域 -->
+        <div class="article-main">
+            <mdui-typography class="article-title">
+                Paged Attention
+            </mdui-typography>
+
+            <!-- 有封面时摘要限制20字 -->
+            
+                <span>Paged Attention仅供自己回忆或记录用，因此可能不会写得太详细
+WhatPaged Attention是一种vllm采用的技术，我的理解是提高内存利用率一种方法
+Problemkv cache需要的内存不是恒定的，decode时kv cache会越来越长，以前采取的做法是预留一块固定的较大的内存用于存储kv cache
+这样的问题是：1.预留太大的内存通常会有一部分用不上，无疑是...</span>
+            
+            
+            <div class="article-meta">
+                <mdui-typography variant="body2" class="article-date">
+                    <mdui-icon name="calendar_today" style="font-size: 1.1rem;"></mdui-icon>
+                    2026-01-07
+                </mdui-typography>
+                
+                <div class="article-tags">
+                    
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右侧：阅读更多 -->
+        <mdui-button class="article-side" variant="tonal">
+            <mdui-icon name="arrow_forward"></mdui-icon>
+        </mdui-button>
+    </div>
+</mdui-card>
+            
+                <mdui-card 
+    class="article-card" 
+    variant="filled"
     onclick="location.href='/2025/12/12/LRU-Cache-%E5%8A%9B%E6%89%A3%E9%A2%98%E8%A7%A3/'">
     
     <div class="article-content">
@@ -1196,7 +1238,7 @@ Qu...</span>
       <div class="copyright">
         <mdui-chip variant="filled" class="footer-chip">
           <mdui-icon name="copyright" slot="icon"></mdui-icon>
-          &copy; 2025 
+          &copy; 2026 
           <a href="/" class="site-link">Hexo</a>
           
             · 保留所有权利
