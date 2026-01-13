@@ -1,0 +1,1157 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="MeshFormer论文解读, blog of hhelloe">
+    <meta name="description" content="这是题主第一次写关于论文的博客，如果有误的地方请联系题主修改
+MeshFormer 解读：用「显式 3D 偏置」重新思考稀疏视角 3D 重建
+论文：MeshFormer: High-Quality Mesh Generation with ">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit|ie-stand|ie-comp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+
+
+    <title>MeshFormer论文解读 | blog of hhelloe</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    
+
+
+    <!-- bg-cover style     -->
+
+
+
+<link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/materialize/materialize.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/aos/aos.css">
+<link rel="stylesheet" type="text/css" href="/libs/animate/animate.min.css">
+<link rel="stylesheet" type="text/css" href="/libs/lightGallery/css/lightgallery.min.css">
+<link rel="stylesheet" type="text/css" href="/css/matery.css">
+<link rel="stylesheet" type="text/css" href="/css/my.css">
+<link rel="stylesheet" type="text/css" href="/css/dark.css" media="none" onload="if(media!='all')media='all'">
+
+
+
+
+    <link rel="stylesheet" href="/libs/tocbot/tocbot.css">
+    <link rel="stylesheet" href="/css/post.css">
+
+
+
+
+    
+        <link rel="stylesheet" type="text/css" href="/css/reward.css">
+    
+
+
+
+    <script src="/libs/jquery/jquery-3.6.0.min.js"></script>
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+
+<body>
+    <header class="navbar-fixed">
+    <nav id="headNav" class="bg-color nav-transparent">
+        <div id="navContainer" class="nav-wrapper container">
+            <div class="brand-logo">
+                <a href="/" class="waves-effect waves-light">
+                    
+                    <img src="/medias/logo.png" class="logo-img" alt="LOGO">
+                    
+                    <span class="logo-span">blog of hhelloe</span>
+                </a>
+            </div>
+            
+
+<a href="#" data-target="mobile-nav" class="sidenav-trigger button-collapse"><i class="fas fa-bars"></i></a>
+<ul class="right nav-menu">
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/" class="waves-effect waves-light">
+      
+      <i class="fas fa-home" style="zoom: 0.6;"></i>
+      
+      <span>首页</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/tags" class="waves-effect waves-light">
+      
+      <i class="fas fa-tags" style="zoom: 0.6;"></i>
+      
+      <span>标签</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/categories" class="waves-effect waves-light">
+      
+      <i class="fas fa-bookmark" style="zoom: 0.6;"></i>
+      
+      <span>分类</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/archives" class="waves-effect waves-light">
+      
+      <i class="fas fa-archive" style="zoom: 0.6;"></i>
+      
+      <span>归档</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/about" class="waves-effect waves-light">
+      
+      <i class="fas fa-user-circle" style="zoom: 0.6;"></i>
+      
+      <span>关于</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/contact" class="waves-effect waves-light">
+      
+      <i class="fas fa-comments" style="zoom: 0.6;"></i>
+      
+      <span>留言板</span>
+    </a>
+    
+  </li>
+  
+  <li class="hide-on-med-and-down nav-item">
+    
+    <a href="/friends" class="waves-effect waves-light">
+      
+      <i class="fas fa-address-book" style="zoom: 0.6;"></i>
+      
+      <span>友情链接</span>
+    </a>
+    
+  </li>
+  
+  <li>
+    <a href="#searchModal" class="modal-trigger waves-effect waves-light">
+      <i id="searchIcon" class="fas fa-search" title="搜索" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+  <li>
+    <a href="javascript:;" class="waves-effect waves-light" onclick="switchNightMode()" title="深色/浅色模式" >
+      <i id="sum-moon-icon" class="fas fa-sun" style="zoom: 0.85;"></i>
+    </a>
+  </li>
+</ul>
+
+
+<div id="mobile-nav" class="side-nav sidenav">
+
+    <div class="mobile-head bg-color">
+        
+        <img src="/medias/logo.png" class="logo-img circle responsive-img">
+        
+        <div class="logo-name">blog of hhelloe</div>
+        <div class="logo-desc">
+            
+            this is hexo-demo
+            
+        </div>
+    </div>
+
+    <ul class="menu-list mobile-menu-list">
+        
+        <li class="m-nav-item">
+	  
+		<a href="/" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-home"></i>
+			
+			首页
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/tags" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-tags"></i>
+			
+			标签
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/categories" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-bookmark"></i>
+			
+			分类
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/archives" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-archive"></i>
+			
+			归档
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/about" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-user-circle"></i>
+			
+			关于
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/contact" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-comments"></i>
+			
+			留言板
+		</a>
+          
+        </li>
+        
+        <li class="m-nav-item">
+	  
+		<a href="/friends" class="waves-effect waves-light">
+			
+			    <i class="fa-fw fas fa-address-book"></i>
+			
+			友情链接
+		</a>
+          
+        </li>
+        
+        
+        <li><div class="divider"></div></li>
+        <li>
+            <a href="https://github.com/blinkfox/hexo-theme-matery" class="waves-effect waves-light" target="_blank">
+                <i class="fab fa-github-square fa-fw"></i>Fork Me
+            </a>
+        </li>
+        
+    </ul>
+</div>
+
+
+        </div>
+
+        
+            <style>
+    .nav-transparent .github-corner {
+        display: none !important;
+    }
+
+    .github-corner {
+        position: absolute;
+        z-index: 10;
+        top: 0;
+        right: 0;
+        border: 0;
+        transform: scale(1.1);
+    }
+
+    .github-corner svg {
+        color: #0f9d58;
+        fill: #fff;
+        height: 64px;
+        width: 64px;
+    }
+
+    .github-corner:hover .octo-arm {
+        animation: a 0.56s ease-in-out;
+    }
+
+    .github-corner .octo-arm {
+        animation: none;
+    }
+
+    @keyframes a {
+        0%,
+        to {
+            transform: rotate(0);
+        }
+        20%,
+        60% {
+            transform: rotate(-25deg);
+        }
+        40%,
+        80% {
+            transform: rotate(10deg);
+        }
+    }
+</style>
+
+<a href="https://github.com/blinkfox/hexo-theme-matery" class="github-corner tooltipped hide-on-med-and-down" target="_blank"
+   data-tooltip="Fork Me" data-position="left" data-delay="50">
+    <svg viewBox="0 0 250 250" aria-hidden="true">
+        <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+        <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+              fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+        <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+              fill="currentColor" class="octo-body"></path>
+    </svg>
+</a>
+        
+    </nav>
+
+</header>
+
+    
+
+
+
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/21.jpg')">
+    <div class="container" style="right: 0px;left: 0px;">
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="brand">
+                    <h1 class="description center-align post-title">MeshFormer论文解读</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<main class="post-container content">
+
+    
+    <div class="row">
+    <div id="main-content" class="col s12 m12 l9">
+        <!-- 文章内容详情 -->
+<div id="artDetail">
+    <div class="card">
+        <div class="card-content article-info">
+            <div class="row tag-cate">
+                <div class="col s7">
+                    
+                          <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                          </div>
+                    
+                </div>
+                <div class="col s5 right-align">
+                    
+                </div>
+            </div>
+
+            <div class="post-info">
+                
+                <div class="post-date info-break-policy">
+                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
+                    2026-01-12
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+        </div>
+        <hr class="clearfix">
+
+        
+
+        
+
+        <div class="card-content article-card-content">
+            <div id="articleContent">
+                <p>这是题主第一次写关于论文的博客，如果有误的地方请联系题主修改</p>
+<h1 id="MeshFormer-解读：用「显式-3D-偏置」重新思考稀疏视角-3D-重建"><a href="#MeshFormer-解读：用「显式-3D-偏置」重新思考稀疏视角-3D-重建" class="headerlink" title="MeshFormer 解读：用「显式 3D 偏置」重新思考稀疏视角 3D 重建"></a>MeshFormer 解读：用「显式 3D 偏置」重新思考稀疏视角 3D 重建</h1><blockquote>
+<p>论文：MeshFormer: High-Quality Mesh Generation with 3D-Guided Reconstruction Model<br>arXiv: 2408.10198<br>项目主页：<a href="https://meshformer3d.github.io/">https://meshformer3d.github.io/</a></p>
+</blockquote>
+<h2 id="MeshFormer解决了什么样的问题"><a href="#MeshFormer解决了什么样的问题" class="headerlink" title="MeshFormer解决了什么样的问题"></a>MeshFormer解决了什么样的问题</h2><h3 id="传统方法"><a href="#传统方法" class="headerlink" title="传统方法"></a>传统方法</h3><pre><code>传统方式在3D生成中训练成本高，并且无论是triplane还是volume rendering本质都是用2D来表示，论文认为这会有两个问题：
+3D领域关系不天然，局部连续性要靠模型自己悟
+3D与2D之间的交互不精确并且昂贵
+</code></pre>
+<h3 id="MeshFormer"><a href="#MeshFormer" class="headerlink" title="MeshFormer"></a>MeshFormer</h3><pre><code>训练成本更低，并且使用sparse voxel进行训练推理，让3D之间的局部关系比较天然、直观
+一句话概括就是“用3D方式解决3D问题”
+</code></pre>
+<h2 id="MeshFormer做了什么"><a href="#MeshFormer做了什么" class="headerlink" title="MeshFormer做了什么"></a>MeshFormer做了什么</h2><ul>
+<li>输入：少量多视角的RGB + normal</li>
+<li>输出：高质量、可直接使用的mesh</li>
+</ul>
+<h2 id="MeshFormer怎么做到的"><a href="#MeshFormer怎么做到的" class="headerlink" title="MeshFormer怎么做到的"></a>MeshFormer怎么做到的</h2><h3 id="显式3D结构-Explicit-3D-structure"><a href="#显式3D结构-Explicit-3D-structure" class="headerlink" title="显式3D结构(Explicit 3D structure)"></a>显式3D结构(Explicit 3D structure)</h3><pre><code>不转换为2D，而是直接使用3D voxel表示，每个特征都有明确的(x,y,z)坐标和邻域
+靠投影几何进行交互，每个voxel会投影在每个相机视角上，得到“它在图像里对应哪里”
+局部靠3D卷积, 整体靠transformer,算子分配合理
+</code></pre>
+<h4 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h4><p>一、用VoxelFormer预测一个低分辨率的occupancy volume(例子给的{64^3})，每个voxel是靠近表面与否的二值或者概率，以此来把表面所在的区域“圈出来”：<br>    可以避免后续在{256^3}的空间里瞎算<br>二、把预测为occupied的voxel区域给subdivide，得到高分辨率(例子给的{256^3})的稀疏体素集合。因为不能算是{256^3}网格，只在表面附近有voxel，所以被称为“sparse voxel”：<br>    不仅让内存算力可控，也使得分辨率可以更高、细节更容易被表达<br>三、SparseVoxelFormer在高分辨率上填细节（此刻才在几何意义上变清晰），使用3D Sparse Convolution预测这些sparse voxels的特征:</p>
+<ul>
+<li>输入：sparse voxels</li>
+<li>输出：sparse feature volume</li>
+</ul>
+<h4 id="3D与2D如何对齐：Projection-Aware-Cross-Attention"><a href="#3D与2D如何对齐：Projection-Aware-Cross-Attention" class="headerlink" title="3D与2D如何对齐：Projection-Aware Cross Attention"></a>3D与2D如何对齐：Projection-Aware Cross Attention</h4><pre><code>对每一个3D voxel的v，不是去看整张图所有token，而是用相机投影矩阵，把voxel v投影到m个视角。在每个视角上，插值取到对应位置的局部2D特征，同时也取原始的RGB/normal像素值。这些preview的局部证据拼起来做“以voxel为query的cross-attention”，自适应决定哪个视角更加可信和权重多少
+</code></pre>
+<ul>
+<li><p>论文中有相关公式：</p>
+</li>
+<li><p>Q来自voxel feature</p>
+</li>
+<li><p>key&#x2F;value来着每个视角的投影局部特征 + voxel自身 （m+1个）</p>
+<p> 对每个3D体素v：<br> 1.投影矩阵把体素中心投到每个view的像素坐标<br> 2.在每个view的2D特征图上双线性插值拿到该点对应的局部patch特征，再拼上投影点的RGB&#x2F;normal数值，形成每个view都有一个2D token {p_v^i}<br> 3.做一次cross-attn：Q来自当前体素v，key&#x2F;value：{p_v^1..p_v^m} + {v}</p>
+</li>
+</ul>
+<h4 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h4><pre><code>因为MeshFormer把3D中本来就存在的东西——空间坐标、邻域关系、投影几何、法线方向这些直接写进了表示和计算中，不需要让模型通过大量的token和参数取隐式的猜，所以被称为“显式3D结构”
+</code></pre>
+<h3 id="强几何监督（SDF-Supervision）"><a href="#强几何监督（SDF-Supervision）" class="headerlink" title="强几何监督（SDF Supervision）"></a>强几何监督（SDF Supervision）</h3><h4 id="SDF是什么"><a href="#SDF是什么" class="headerlink" title="SDF是什么"></a>SDF是什么</h4><pre><code>SDF（Signed Distance Function）：对空间中任意点x，输出x到物体表面的带距离符号
+当SDF&lt;0时，点在物体内部
+当SDF=0时，点在物体表面
+当SDF&gt;0时，点在物体外部
+
+训练时，模型先得到高分辨率的3D sparse feature volume，然后对near-surface 3D点做trilinear插值取特征，再用3个小MLP分别预测SDF field（{512^3}的GT SDF volume通过MSE Loss监督SDF MLP）、color texture、normal texture。
+也就是说，SDF是一个MLP输出。之后在SDF field中抽取mesh(dual Marching Cubes)进行surface rendering计算渲染损失
+
+论文把SDF监督项Loss直接加进了总loss里
+{L_SDF}​=MSE({SDF_pred}​,{SDF_gt}​)
+MSE是均方误差，SDF需要强、平滑、对大误差敏感的梯度，MSE对大误差很敏感
+
+通过高分辨率 SDF 强监督，MeshFormer 将几何约束直接引入训练过程，使得 mesh 不再是渲染或 density 场的后处理结果，而是可以参与端到端训练。这也是其能够在单阶段中稳定生成高质量 mesh 的关键原因。
+</code></pre>
+<h3 id="2D到3D的几何引导（Normal-Guidance）"><a href="#2D到3D的几何引导（Normal-Guidance）" class="headerlink" title="2D到3D的几何引导（Normal Guidance）"></a>2D到3D的几何引导（Normal Guidance）</h3><h4 id="在做什么"><a href="#在做什么" class="headerlink" title="在做什么"></a>在做什么</h4><pre><code>用2D模型或数据给出的多视角法线图（normal maps），强行把3D重建这件事从“猜形状”变成“按方向拼形状”。
+Normal Guidance 并不是替代几何学习，而是作为几何重建的辅助信号，用于降低稀疏视角下的歧义性。
+</code></pre>
+<h4 id="具体表现"><a href="#具体表现" class="headerlink" title="具体表现"></a>具体表现</h4><p>一.训练推理时，模型输入不仅有多视角RGB，还有多视角normal maps，可以来自数据真值，也可以来自生成&#x2F;预测模型<br>二.SDF field里抽出mesh后会渲染出RGB图和normal图，对normal图也会计算损失，让网络不仅颜色像，表面方向也像<br>三.论文中还有一个重要设计，normal不仅从mesh几何法线中算出来，还会由一个小MLP从3D特征里直接预测normal texture并用渲染loss约束它，负责高频细节的方向信息</p>
+<h2 id="整体-Pipeline-概览"><a href="#整体-Pipeline-概览" class="headerlink" title="整体 Pipeline 概览"></a>整体 Pipeline 概览</h2><pre><code>多视角RGB+多视角Normal （2D backbone提特征）
+多视角2D features （投影对齐，再cross attention注入到3D，最后VoxelFormer）
+低分辨率occupancy （对near-surface的occupancy voxel做subdivide）
+Sparse voxels （SparseVoxelFormer）
+高分辨率3D Sparse feature volume （trilinear插值取点特征）
+SDF field + Color texture + Normal texture
+SDF field（SDF = 0 + dual Marching Cubes）
+
+训练：NVDiffRast渲染RGB/Normal -&gt; 计算渲染损失
+推理：直接输出mesh + 纹理 （可选再做几何增强）
+</code></pre>
+<h2 id="Transformer-3D-Convolution"><a href="#Transformer-3D-Convolution" class="headerlink" title="Transformer + 3D Convolution"></a>Transformer + 3D Convolution</h2><h3 id="为什么不全Transformer"><a href="#为什么不全Transformer" class="headerlink" title="为什么不全Transformer"></a>为什么不全Transformer</h3><pre><code>MeshFormer选择3D voxel表示，voxel很大，如果对高分辨率的3D token直接做全局self-attention，运算量和显存会直接炸
+于是作者选择了一种折中的方案：
+3D Convolution负责高分辨率体上的局部编码解码
+Transformer只在压缩后的低分辨率体上做全局推理（调整3D表示让整体形状像一个正常的物体）与记忆先验（将Transformer在训练中的“东西通常长什么样”内化成了参数里的统计喜好）
+</code></pre>
+<h3 id="论文的子网络中怎么具体实现"><a href="#论文的子网络中怎么具体实现" class="headerlink" title="论文的子网络中怎么具体实现"></a>论文的子网络中怎么具体实现</h3><h4 id="VoxelFormer"><a href="#VoxelFormer" class="headerlink" title="VoxelFormer"></a>VoxelFormer</h4><pre><code>Unet 4个level：64³ → 32³ → 16³ → 16³
+每层都有：ResNet + projection-aware cross-attn + downsample
+bottleneck：6层Transformer，token channel 512
+</code></pre>
+<h5 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h5><ul>
+<li>输入：m视角RGB+normal</li>
+<li>步骤：每张图先过一个2D feature extractor（文中举例DINOv2）得到 patch-level 特征，论文里在cross-attn的key&#x2F;value里把“特征+像素值”一起拼。3D feature volume从一个“共享的可学习的token”开始，再加上体素坐标&#x2F;位置编码。（一开始，3D空间里的每个体素都知道nothing，网络先给他们发同一张空白纸再告诉它们在空间的位置，后续靠2D证据和3D结构一点点把信息写进去）</li>
+</ul>
+<h4 id="SparseVoxelFormer"><a href="#SparseVoxelFormer" class="headerlink" title="SparseVoxelFormer"></a>SparseVoxelFormer</h4><pre><code>sparse Unet 6个level：256³ → 128³ → 64³ → 32³ → 16³ → 16³
+bottleneck：16层Transformer，token channel 1024
+该阶段更依赖先验与全局一致性，所以Transformer更深、更宽
+</code></pre>
+<h5 id="过程-1"><a href="#过程-1" class="headerlink" title="过程"></a>过程</h5><pre><code>把粗细节的高分辨率Sparse voxels通过SparseVoxelFormer重新学习几何，通过高分辨率 sparse 体素上的 3D 卷积、跨视角证据融合和 SDF 强监督直接学习得到清晰的边界、锐利的边角、薄结构
+</code></pre>
+<h2 id="一些相关概念补充"><a href="#一些相关概念补充" class="headerlink" title="一些相关概念补充"></a>一些相关概念补充</h2><h3 id="trilinear"><a href="#trilinear" class="headerlink" title="trilinear"></a>trilinear</h3><pre><code>trilinear插值会在查询点周围8个体素角点上取特征，并且按点到各角点的相对距离计算权重做加权和，从而把离散的3D sparse feature volume变成可在连续3D空间查询的特征场，供后续MLP预测用
+</code></pre>
+<h3 id="MeshFormer与别的方式对照"><a href="#MeshFormer与别的方式对照" class="headerlink" title="MeshFormer与别的方式对照"></a>MeshFormer与别的方式对照</h3><pre><code>triplane：token-friendly，但3D连续性是隐式的，看起来是3D实际上是在2D平面上绕
+NeRF：渲染友好，但mesh提取是后处理，大概就是NeRF就不是专门弄mesh的，是拿来渲染用的，在乎的不是显式可用的mesh
+MeshFormer：几何是主任务，mesh从训练到推理都是主输出
+</code></pre>
+
+                
+            </div>
+            <hr/>
+
+            
+
+    <div class="reprint" id="reprint-statement">
+        
+            <div class="reprint__author">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-user">
+                        文章作者:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="/about" rel="external nofollow noreferrer">Austin</a>
+                </span>
+            </div>
+            <div class="reprint__type">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-link">
+                        文章链接:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    <a href="http://hhelloe.github.io/2026/01/12/MeshFormer%E8%AE%BA%E6%96%87%E8%A7%A3%E8%AF%BB/">http://hhelloe.github.io/2026/01/12/MeshFormer%E8%AE%BA%E6%96%87%E8%A7%A3%E8%AF%BB/</a>
+                </span>
+            </div>
+            <div class="reprint__notice">
+                <span class="reprint-meta" style="font-weight: bold;">
+                    <i class="fas fa-copyright">
+                        版权声明:
+                    </i>
+                </span>
+                <span class="reprint-info">
+                    本博客所有文章除特別声明外，均采用
+                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
+                    许可协议。转载请注明来源
+                    <a href="/about" target="_blank">Austin</a>
+                    !
+                </span>
+            </div>
+        
+    </div>
+
+    <script async defer>
+      document.addEventListener("copy", function (e) {
+        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
+        M.toast({html: toastHTML})
+      });
+
+      function navToReprintStatement() {
+        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
+      }
+    </script>
+
+
+
+            <div class="tag_share" style="display: block;">
+                <div class="post-meta__tag-list" style="display: inline-block;">
+                    
+                        <div class="article-tag">
+                            <span class="chip bg-color">无标签</span>
+                        </div>
+                    
+                </div>
+                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
+                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
+<div id="article-share">
+
+    
+    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
+    <script src="/libs/share/js/social-share.min.js"></script>
+    
+
+    
+
+</div>
+
+                </div>
+            </div>
+            
+                <div id="reward">
+    <a href="#rewardModal" class="reward-link modal-trigger btn-floating btn-medium waves-effect waves-light red">赏</a>
+
+    <!-- Modal Structure -->
+    <div id="rewardModal" class="modal">
+        <div class="modal-content">
+            <a class="close modal-close"><i class="fas fa-times"></i></a>
+            <h4 class="reward-title">你的赏识是我前进的动力</h4>
+            <div class="reward-content">
+                <div class="reward-tabs">
+                    <ul class="tabs row">
+                        <li class="tab col s6 alipay-tab waves-effect waves-light"><a href="#alipay">支付宝</a></li>
+                        <li class="tab col s6 wechat-tab waves-effect waves-light"><a href="#wechat">微 信</a></li>
+                    </ul>
+                    <div id="alipay">
+                        <img src="/medias/reward/alipay.jpg" class="reward-img" alt="支付宝打赏二维码">
+                    </div>
+                    <div id="wechat">
+                        <img src="/medias/reward/wechat.png" class="reward-img" alt="微信打赏二维码">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('.tabs').tabs();
+    });
+</script>
+
+            
+        </div>
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+<article id="prenext-posts" class="prev-next articles">
+    <div class="row article-row">
+        
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
+            <div class="article-badge left-badge text-color">
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
+            <div class="card">
+                <a href="/2026/01/12/MeshFormer%E8%AE%BA%E6%96%87%E8%A7%A3%E8%AF%BB/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="MeshFormer论文解读">
+                        
+                        <span class="card-title">MeshFormer论文解读</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2026-01-12
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-user fa-fw"></i>
+                            Austin
+                            
+                        </span>
+                    </div>
+                </div>
+
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2026/01/08/nano%20vllm%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="nona vllm源码解读">
+                        
+                        <span class="card-title">nona vllm源码解读</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2026-01-08
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-user fa-fw"></i>
+                            Austin
+                            
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</article>
+
+</div>
+
+
+
+<!-- 代码块功能依赖 -->
+<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
+
+
+
+<!-- 代码语言 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+
+
+<!-- 代码块复制 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+
+
+<!-- 代码块收缩 -->
+
+<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+
+    </div>
+    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
+        <div class="toc-widget card" style="background-color: white;">
+            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
+            <div id="toc-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOC 悬浮按钮. -->
+
+<div id="floating-toc-btn" class="hide-on-med-and-down">
+    <a class="btn-floating btn-large bg-color">
+        <i class="fas fa-list-ul"></i>
+    </a>
+</div>
+
+
+<script src="/libs/tocbot/tocbot.min.js"></script>
+<script>
+    $(function () {
+        tocbot.init({
+            tocSelector: '#toc-content',
+            contentSelector: '#articleContent',
+            headingsOffset: -($(window).height() * 0.4 - 45),
+            collapseDepth: Number('0'),
+            headingSelector: 'h2, h3, h4'
+        });
+
+        // Set scroll toc fixed.
+        let tocHeight = parseInt($(window).height() * 0.4 - 64);
+        let $tocWidget = $('.toc-widget');
+        $(window).scroll(function () {
+            let scroll = $(window).scrollTop();
+            /* add post toc fixed. */
+            if (scroll > tocHeight) {
+                $tocWidget.addClass('toc-fixed');
+            } else {
+                $tocWidget.removeClass('toc-fixed');
+            }
+        });
+
+        
+        /* 修复文章卡片 div 的宽度. */
+        let fixPostCardWidth = function (srcId, targetId) {
+            let srcDiv = $('#' + srcId);
+            if (srcDiv.length === 0) {
+                return;
+            }
+
+            let w = srcDiv.width();
+            if (w >= 450) {
+                w = w + 21;
+            } else if (w >= 350 && w < 450) {
+                w = w + 18;
+            } else if (w >= 300 && w < 350) {
+                w = w + 16;
+            } else {
+                w = w + 14;
+            }
+            $('#' + targetId).width(w);
+        };
+
+        // 切换TOC目录展开收缩的相关操作.
+        const expandedClass = 'expanded';
+        let $tocAside = $('#toc-aside');
+        let $mainContent = $('#main-content');
+        $('#floating-toc-btn .btn-floating').click(function () {
+            if ($tocAside.hasClass(expandedClass)) {
+                $tocAside.removeClass(expandedClass).hide();
+                $mainContent.removeClass('l9');
+            } else {
+                $tocAside.addClass(expandedClass).show();
+                $mainContent.addClass('l9');
+            }
+            fixPostCardWidth('artDetail', 'prenext-posts');
+        });
+        
+    });
+</script>
+
+    
+
+</main>
+
+
+
+
+    <footer class="page-footer bg-color">
+    
+        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
+<style>
+    .aplayer .aplayer-lrc p {
+        
+        display: none;
+        
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 16px !important;
+    }
+
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+        
+        display: none;
+        
+        font-size: 15px;
+        color: #42b983;
+    }
+
+    
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+        left: -66px !important;
+    }
+
+    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
+        left: 0px !important;
+    }
+
+    
+</style>
+<div class="">
+    
+    <div class="row">
+        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
+                   server="netease"
+                   type="playlist"
+                   id="503838841"
+                   fixed='true'
+                   autoplay='false'
+                   theme='#42b983'
+                   loop='all'
+                   order='random'
+                   preload='auto'
+                   volume='0.7'
+                   list-folded='true'
+        >
+        </meting-js>
+    </div>
+</div>
+
+<script src="/libs/aplayer/APlayer.min.js"></script>
+<script src="/libs/aplayer/Meting.min.js"></script>
+
+    
+
+    <div class="container row center-align"
+         style="margin-bottom: 0px !important;">
+        <div class="col s12 m8 l8 copy-right">
+            Copyright&nbsp;&copy;
+            
+                <span id="year">2019-2026</span>
+            
+            <a href="/about" target="_blank">Austin</a>
+            |&nbsp;Powered by&nbsp;<a href="https://hexo.io/" target="_blank">Hexo</a>
+            |&nbsp;Theme&nbsp;<a href="https://github.com/blinkfox/hexo-theme-matery" target="_blank">Matery</a>
+            
+            <br>
+            
+            
+            
+                
+            
+            
+                <span id="busuanzi_container_site_pv">
+                &nbsp;|&nbsp;<i class="far fa-eye"></i>&nbsp;总访问量:&nbsp;
+                    <span id="busuanzi_value_site_pv" class="white-color"></span>
+            </span>
+            
+            
+                <span id="busuanzi_container_site_uv">
+                &nbsp;|&nbsp;<i class="fas fa-users"></i>&nbsp;总访问人数:&nbsp;
+                    <span id="busuanzi_value_site_uv" class="white-color"></span>
+            </span>
+            
+            <br>
+
+            <!-- 运行天数提醒. -->
+            
+            <br>
+            
+        </div>
+        <div class="col s12 m4 l4 social-link social-statis">
+    <a href="https://github.com/blinkfox" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+        <i class="fab fa-github"></i>
+    </a>
+
+
+
+    <a href="mailto:1181062873@qq.com" class="tooltipped" target="_blank" data-tooltip="邮件联系我" data-position="top" data-delay="50">
+        <i class="fas fa-envelope-open"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=1181062873" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 1181062873" data-position="top" data-delay="50">
+        <i class="fab fa-qq"></i>
+    </a>
+
+
+
+
+
+
+
+    <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
+        <i class="fas fa-rss"></i>
+    </a>
+
+</div>
+    </div>
+</footer>
+
+<div class="progress-bar"></div>
+
+
+    <!-- 搜索遮罩框 -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <div class="search-header">
+            <span class="title"><i class="fas fa-search"></i>&nbsp;&nbsp;搜索</span>
+            <input type="search" id="searchInput" name="s" placeholder="请输入搜索的关键字"
+                   class="search-input">
+        </div>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+$(function () {
+    var searchFunc = function (path, search_id, content_id) {
+        'use strict';
+        $.ajax({
+            url: path,
+            dataType: "xml",
+            success: function (xmlResponse) {
+                // get the contents from search data
+                var datas = $("entry", xmlResponse).map(function () {
+                    return {
+                        title: $("title", this).text(),
+                        content: $("content", this).text(),
+                        url: $("url", this).text()
+                    };
+                }).get();
+                var $input = document.getElementById(search_id);
+                var $resultContent = document.getElementById(content_id);
+                $input.addEventListener('input', function () {
+                    var str = '<ul class=\"search-result-list\">';
+                    var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                    $resultContent.innerHTML = "";
+                    if (this.value.trim().length <= 0) {
+                        return;
+                    }
+                    // perform local searching
+                    datas.forEach(function (data) {
+                        var isMatch = true;
+                        var data_title = data.title.trim().toLowerCase();
+                        var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                        var data_url = data.url;
+                        data_url = data_url.indexOf('/') === 0 ? data.url : '/' + data_url;
+                        var index_title = -1;
+                        var index_content = -1;
+                        var first_occur = -1;
+                        // only match artiles with not empty titles and contents
+                        if (data_title !== '' && data_content !== '') {
+                            keywords.forEach(function (keyword, i) {
+                                index_title = data_title.indexOf(keyword);
+                                index_content = data_content.indexOf(keyword);
+                                if (index_title < 0 && index_content < 0) {
+                                    isMatch = false;
+                                } else {
+                                    if (index_content < 0) {
+                                        index_content = 0;
+                                    }
+                                    if (i === 0) {
+                                        first_occur = index_content;
+                                    }
+                                }
+                            });
+                        }
+                        // show search results
+                        if (isMatch) {
+                            str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                            var content = data.content.trim().replace(/<[^>]+>/g, "");
+                            if (first_occur >= 0) {
+                                // cut out 100 characters
+                                var start = first_occur - 20;
+                                var end = first_occur + 80;
+                                if (start < 0) {
+                                    start = 0;
+                                }
+                                if (start === 0) {
+                                    end = 100;
+                                }
+                                if (end > content.length) {
+                                    end = content.length;
+                                }
+                                var match_content = content.substr(start, end);
+                                // highlight all keywords
+                                keywords.forEach(function (keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    match_content = match_content.replace(regS, "<em class=\"search-keyword\">" + keyword + "</em>");
+                                });
+
+                                str += "<p class=\"search-result\">" + match_content + "...</p>"
+                            }
+                            str += "</li>";
+                        }
+                    });
+                    str += "</ul>";
+                    $resultContent.innerHTML = str;
+                });
+            }
+        });
+    };
+
+    searchFunc('/search.xml', 'searchInput', 'searchResult');
+});
+</script>
+
+    <!-- 白天和黑夜主题 -->
+<div class="stars-con">
+    <div id="stars"></div>
+    <div id="stars2"></div>
+    <div id="stars3"></div>  
+</div>
+
+<script>
+    function switchNightMode() {
+        $('<div class="Cuteen_DarkSky"><div class="Cuteen_DarkPlanet"></div></div>').appendTo($('body')),
+        setTimeout(function () {
+            $('body').hasClass('DarkMode') 
+            ? ($('body').removeClass('DarkMode'), localStorage.setItem('isDark', '0'), $('#sum-moon-icon').removeClass("fa-sun").addClass('fa-moon')) 
+            : ($('body').addClass('DarkMode'), localStorage.setItem('isDark', '1'), $('#sum-moon-icon').addClass("fa-sun").removeClass('fa-moon')),
+            
+            setTimeout(function () {
+            $('.Cuteen_DarkSky').fadeOut(1e3, function () {
+                $(this).remove()
+            })
+            }, 2e3)
+        })
+    }
+</script>
+
+    <!-- 回到顶部按钮 -->
+<div id="backTop" class="top-scroll">
+    <a class="btn-floating btn-large waves-effect waves-light" href="#!">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+</div>
+
+
+    <script src="/libs/materialize/materialize.min.js"></script>
+    <script src="/libs/masonry/masonry.pkgd.min.js"></script>
+    <script src="/libs/aos/aos.js"></script>
+    <script src="/libs/scrollprogress/scrollProgress.min.js"></script>
+    <script src="/libs/lightGallery/js/lightgallery-all.min.js"></script>
+    <script src="/js/matery.js"></script>
+
+    
+
+    
+    
+    
+
+    <!-- 雪花特效 -->
+    
+
+    <!-- 鼠标星星特效 -->
+    
+
+     
+        <script src="https://ssl.captcha.qq.com/TCaptcha.js"></script>
+        <script src="/libs/others/TencentCaptcha.js"></script>
+        <button id="TencentCaptcha" data-appid="xxxxxxxxxx" data-cbfn="callback" type="button" hidden></button>
+    
+
+    <!-- Baidu Analytics -->
+
+    <!-- Baidu Push -->
+
+<script>
+    (function () {
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        } else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+    
+    <script src="/libs/others/clicklove.js" async="async"></script>
+    
+    
+    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
+    
+
+    
+
+    
+
+    <!--腾讯兔小巢-->
+    
+    
+
+    
+
+    
+
+    
+    <script src="/libs/instantpage/instantpage.js" type="module"></script>
+    
+
+</body>
+
+</html>
