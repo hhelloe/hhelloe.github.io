@@ -4,10 +4,8 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="nona vllm源码解读 (未完成), blog of hhelloe">
-    <meta name="description" content="题主代码只会一些基本语法和刷了几道算法题的程度，直接嗯看代码实在是困难，于是采用这种笨方法边学边记录每一块的功能
-就先局部局部的看着吧，知道每一块干嘛的，之后我再另写一篇看能不能从全局上有什么收获
-nanovllmsampling_para">
+    <meta name="keywords" content="blog of hhelloe">
+    <meta name="description" content="">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -19,7 +17,7 @@ nanovllmsampling_para">
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>nona vllm源码解读 (未完成) | blog of hhelloe</title>
+    <title>blog of hhelloe</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -334,12 +332,12 @@ nanovllmsampling_para">
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/17.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">nona vllm源码解读 (未完成)</h1>
+                    <h1 class="description center-align post-title"></h1>
                 </div>
             </div>
         </div>
@@ -375,7 +373,7 @@ nanovllmsampling_para">
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2026-01-14
+                    2026-01-15
                 </div>
                 
 
@@ -396,26 +394,7 @@ nanovllmsampling_para">
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>题主代码只会一些基本语法和刷了几道算法题的程度，直接嗯看代码实在是困难，于是采用这种笨方法边学边记录每一块的功能</p>
-<p>就先局部局部的看着吧，知道每一块干嘛的，之后我再另写一篇看能不能从全局上有什么收获</p>
-<h2 id="nanovllm"><a href="#nanovllm" class="headerlink" title="nanovllm"></a>nanovllm</h2><h3 id="sampling-params-py"><a href="#sampling-params-py" class="headerlink" title="sampling_params.py"></a>sampling_params.py</h3><p>@dataclass 声明类的核心目的是装数据，而非藏逻辑</p>
-<p>其内只有一个类SamplingParams<br>初始化了temperature、max_tokens和ignore_eox 并规定了temperature的最小值</p>
-<h2 id="engine"><a href="#engine" class="headerlink" title="engine"></a>engine</h2><h3 id="model-runner"><a href="#model-runner" class="headerlink" title="model_runner"></a>model_runner</h3><h3 id="block-manager"><a href="#block-manager" class="headerlink" title="block_manager"></a>block_manager</h3><h4 id="Block"><a href="#Block" class="headerlink" title="Block"></a>Block</h4><p>init<br>block_id,ref_count,hash,token_ids</p>
-<p>update<br>更新hash和token_ids</p>
-<p>reset</p>
-<h4 id="BlockManager"><a href="#BlockManager" class="headerlink" title="BlockManager"></a>BlockManager</h4><p>init<br>初始化block_size，block池，hash和block索引表等<br>\\\\\to be continued\\</p>
-<h3 id="sequence"><a href="#sequence" class="headerlink" title="sequence"></a>sequence</h3><h4 id="Class-SequenceStatus"><a href="#Class-SequenceStatus" class="headerlink" title="Class SequenceStatus"></a>Class SequenceStatus</h4><p>定义Sequence的合法生命周期状态(WAITTING,RUNNING,FINISHED)</p>
-<h4 id="Sequence"><a href="#Sequence" class="headerlink" title="Sequence"></a>Sequence</h4><p>init<br>给每个seq_id分配唯一递增id，规定status，初始化变量等</p>
-<p>@property 调用函数不需要加括号，像是在访问属性一样，语义上为状态。def了很多函数，把计算的结果伪装成字段一样的属性</p>
-<p>block(self, i)<br>用来取出第i个token块<br>assert限制边界</p>
-<p>append_token<br>token_ids里添加新token_id<br>更新last_token和num_tokens</p>
-<p>getstate与setstate保存状态</p>
-<h3 id="llm-engine"><a href="#llm-engine" class="headerlink" title="llm_engine"></a>llm_engine</h3><h4 id="class-LLMEngine"><a href="#class-LLMEngine" class="headerlink" title="class LLMEngine"></a>class LLMEngine</h4><p>init 初始化<br>1.建立Config对象过滤无关的kwargs<br>2.初始化进程和存储子进程的列表,spawn 让子进程从干净的解释器状态启动<br>3.启动tensor_parallel_size - 1个子进程，并在列表中记录，对应rank &#x3D; 1,2,…,tensor_parallel_size - 1<br>4.主进程里创建rank&#x3D;0的ModelRunner实例，持有其他rank的events<br>5.匹配分词器(tokenizer)<br>6.tokenizer和config对齐结束符(eos)<br>7.初始化Scheduler<br>8.结束、释放内存</p>
-<p>exit 退出全部进程<br>1.通过rank0 runner通知所有runner我们要退出了，自己把循环退掉、资源清掉哈<br>2.删除主进程里rank0 runner的python引用，允许其相关对象被回收<br>3.阻塞等待所有子进程退出，之后结束主进程</p>
-<p>add_request 调度请求怎么跑<br>1.已被编码&#x2F;编码prompt得到token列表<br>2.token列表+采样参数，创建一个Sequence（一次生成任务的任务单）<br>3.Sequence交给scheduler执行</p>
-<p>step 一步一步跑seqs，对finish的seq输出其最终token id<br>1.调度器从等待&#x2F;运行中的sequence里调一批执行，并标记为prefill阶段还是decode<br>2.seqs交给runner，返回结果token_ids<br>3.处理结果，判断seq结束后整理输出output<br>4.统计token量<br>5.返回output与token量</p>
-<p>generate<br>1.初始化进度条<br>2.使sampling_params(后简称为sp)为列表<br>3.将prompt和sp分别对应然后提出推理请求<br>4.初始化表示输出和吞吐量的变量<br>5.while调度器检查是否有未完成seq，计时。计算输出和token数量，算出吞吐量<br>6.输出序列绑定seq id，值绑定token ids，同时进度条增加<br>7.排序输出，解码输出，关闭进度条，返回输出</p>
-
+                
                 
             </div>
             <hr/>
@@ -441,7 +420,7 @@ nanovllmsampling_para">
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://hhelloe.github.io/2026/01/14/nano%20vllm%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/">http://hhelloe.github.io/2026/01/14/nano%20vllm%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/</a>
+                    <a href="http://hhelloe.github.io/2026/01/15/%E7%AC%AC%E4%B8%80%E6%AC%A1%E7%AE%97%E5%AD%90%E4%BC%98%E5%8C%96/">http://hhelloe.github.io/2026/01/15/%E7%AC%AC%E4%B8%80%E6%AC%A1%E7%AE%97%E5%AD%90%E4%BC%98%E5%8C%96/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -800,13 +779,13 @@ nanovllmsampling_para">
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2026/01/14/future/">
+                <a href="/2026/01/15/%E6%95%B0%E5%AD%A6%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="to learn">
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
                         
-                        <span class="card-title">to learn</span>
+                        <span class="card-title"></span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -817,7 +796,7 @@ nanovllmsampling_para">
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2026-01-14
+                            <i class="far fa-clock fa-fw icon-date"></i>2026-01-15
                         </span>
                         <span class="publish-author">
                             
@@ -837,13 +816,13 @@ nanovllmsampling_para">
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2026/01/12/MeshFormer%E8%AE%BA%E6%96%87%E8%A7%A3%E8%AF%BB/">
+                <a href="/2026/01/14/SparseFlex%E8%AE%BA%E6%96%87%E8%A7%A3%E8%AF%BB/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="MeshFormer论文解读">
+                        <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="SparseFlex论文解读">
                         
-                        <span class="card-title">MeshFormer论文解读</span>
+                        <span class="card-title">SparseFlex论文解读</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -854,7 +833,7 @@ nanovllmsampling_para">
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2026-01-12
+                                <i class="far fa-clock fa-fw icon-date"></i>2026-01-14
                             </span>
                         <span class="publish-author">
                             
@@ -863,22 +842,6 @@ nanovllmsampling_para">
                             
                         </span>
                     </div>
-                </div>
-                
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/Voxel/">
-                        <span class="chip bg-color">Voxel</span>
-                    </a>
-                    
-                    <a href="/tags/normal/">
-                        <span class="chip bg-color">normal</span>
-                    </a>
-                    
-                    <a href="/tags/Mesh%E7%94%9F%E6%88%90/">
-                        <span class="chip bg-color">Mesh生成</span>
-                    </a>
-                    
                 </div>
                 
             </div>

@@ -4,10 +4,9 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="nona vllm源码解读 (未完成), blog of hhelloe">
-    <meta name="description" content="题主代码只会一些基本语法和刷了几道算法题的程度，直接嗯看代码实在是困难，于是采用这种笨方法边学边记录每一块的功能
-就先局部局部的看着吧，知道每一块干嘛的，之后我再另写一篇看能不能从全局上有什么收获
-nanovllmsampling_para">
+    <meta name="keywords" content="blog of hhelloe">
+    <meta name="description" content="以下是gpt的建议
+想成为“大模型高手”，数学上你需要的不只是“会算”，而是能把模型行为、训练动态、数值稳定性、泛化用一套可操作的数学语言讲清楚。下面给你一条完整路线：每一阶段学什么、为什么、怎么练、练到什么程度算过关。默认你已经有基本微积">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -19,7 +18,7 @@ nanovllmsampling_para">
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>nona vllm源码解读 (未完成) | blog of hhelloe</title>
+    <title>blog of hhelloe</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -334,12 +333,12 @@ nanovllmsampling_para">
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/17.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">nona vllm源码解读 (未完成)</h1>
+                    <h1 class="description center-align post-title"></h1>
                 </div>
             </div>
         </div>
@@ -375,7 +374,7 @@ nanovllmsampling_para">
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2026-01-14
+                    2026-01-15
                 </div>
                 
 
@@ -396,25 +395,224 @@ nanovllmsampling_para">
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>题主代码只会一些基本语法和刷了几道算法题的程度，直接嗯看代码实在是困难，于是采用这种笨方法边学边记录每一块的功能</p>
-<p>就先局部局部的看着吧，知道每一块干嘛的，之后我再另写一篇看能不能从全局上有什么收获</p>
-<h2 id="nanovllm"><a href="#nanovllm" class="headerlink" title="nanovllm"></a>nanovllm</h2><h3 id="sampling-params-py"><a href="#sampling-params-py" class="headerlink" title="sampling_params.py"></a>sampling_params.py</h3><p>@dataclass 声明类的核心目的是装数据，而非藏逻辑</p>
-<p>其内只有一个类SamplingParams<br>初始化了temperature、max_tokens和ignore_eox 并规定了temperature的最小值</p>
-<h2 id="engine"><a href="#engine" class="headerlink" title="engine"></a>engine</h2><h3 id="model-runner"><a href="#model-runner" class="headerlink" title="model_runner"></a>model_runner</h3><h3 id="block-manager"><a href="#block-manager" class="headerlink" title="block_manager"></a>block_manager</h3><h4 id="Block"><a href="#Block" class="headerlink" title="Block"></a>Block</h4><p>init<br>block_id,ref_count,hash,token_ids</p>
-<p>update<br>更新hash和token_ids</p>
-<p>reset</p>
-<h4 id="BlockManager"><a href="#BlockManager" class="headerlink" title="BlockManager"></a>BlockManager</h4><p>init<br>初始化block_size，block池，hash和block索引表等<br>\\\\\to be continued\\</p>
-<h3 id="sequence"><a href="#sequence" class="headerlink" title="sequence"></a>sequence</h3><h4 id="Class-SequenceStatus"><a href="#Class-SequenceStatus" class="headerlink" title="Class SequenceStatus"></a>Class SequenceStatus</h4><p>定义Sequence的合法生命周期状态(WAITTING,RUNNING,FINISHED)</p>
-<h4 id="Sequence"><a href="#Sequence" class="headerlink" title="Sequence"></a>Sequence</h4><p>init<br>给每个seq_id分配唯一递增id，规定status，初始化变量等</p>
-<p>@property 调用函数不需要加括号，像是在访问属性一样，语义上为状态。def了很多函数，把计算的结果伪装成字段一样的属性</p>
-<p>block(self, i)<br>用来取出第i个token块<br>assert限制边界</p>
-<p>append_token<br>token_ids里添加新token_id<br>更新last_token和num_tokens</p>
-<p>getstate与setstate保存状态</p>
-<h3 id="llm-engine"><a href="#llm-engine" class="headerlink" title="llm_engine"></a>llm_engine</h3><h4 id="class-LLMEngine"><a href="#class-LLMEngine" class="headerlink" title="class LLMEngine"></a>class LLMEngine</h4><p>init 初始化<br>1.建立Config对象过滤无关的kwargs<br>2.初始化进程和存储子进程的列表,spawn 让子进程从干净的解释器状态启动<br>3.启动tensor_parallel_size - 1个子进程，并在列表中记录，对应rank &#x3D; 1,2,…,tensor_parallel_size - 1<br>4.主进程里创建rank&#x3D;0的ModelRunner实例，持有其他rank的events<br>5.匹配分词器(tokenizer)<br>6.tokenizer和config对齐结束符(eos)<br>7.初始化Scheduler<br>8.结束、释放内存</p>
-<p>exit 退出全部进程<br>1.通过rank0 runner通知所有runner我们要退出了，自己把循环退掉、资源清掉哈<br>2.删除主进程里rank0 runner的python引用，允许其相关对象被回收<br>3.阻塞等待所有子进程退出，之后结束主进程</p>
-<p>add_request 调度请求怎么跑<br>1.已被编码&#x2F;编码prompt得到token列表<br>2.token列表+采样参数，创建一个Sequence（一次生成任务的任务单）<br>3.Sequence交给scheduler执行</p>
-<p>step 一步一步跑seqs，对finish的seq输出其最终token id<br>1.调度器从等待&#x2F;运行中的sequence里调一批执行，并标记为prefill阶段还是decode<br>2.seqs交给runner，返回结果token_ids<br>3.处理结果，判断seq结束后整理输出output<br>4.统计token量<br>5.返回output与token量</p>
-<p>generate<br>1.初始化进度条<br>2.使sampling_params(后简称为sp)为列表<br>3.将prompt和sp分别对应然后提出推理请求<br>4.初始化表示输出和吞吐量的变量<br>5.while调度器检查是否有未完成seq，计时。计算输出和token数量，算出吞吐量<br>6.输出序列绑定seq id，值绑定token ids，同时进度条增加<br>7.排序输出，解码输出，关闭进度条，返回输出</p>
+                <p>以下是gpt的建议</p>
+<p>想成为“大模型高手”，数学上你需要的不只是“会算”，而是能把<strong>模型行为、训练动态、数值稳定性、泛化</strong>用一套可操作的数学语言讲清楚。下面给你一条<strong>完整路线</strong>：每一阶段学什么、为什么、怎么练、练到什么程度算过关。默认你已经有基本微积分&#x2F;线代入门水平；如果没有也没关系，路线里会从地基补起。</p>
+<hr>
+<h2 id="你要掌握的数学“主干骨架”"><a href="#你要掌握的数学“主干骨架”" class="headerlink" title="你要掌握的数学“主干骨架”"></a>你要掌握的数学“主干骨架”</h2><p>大模型（尤其 Transformer&#x2F;LLM）背后的数学其实主要是 6 根柱子：</p>
+<ol>
+<li><strong>线性代数（高维几何 + 矩阵计算）</strong></li>
+<li><strong>概率统计（不确定性 + 分布 + 估计）</strong></li>
+<li><strong>优化理论（梯度法为什么能训起来，什么时候训不起来）</strong></li>
+<li><strong>信息论（交叉熵、KL、困惑度、压缩视角）</strong></li>
+<li><strong>数值分析（浮点、误差、稳定性，决定你能不能把模型训稳）</strong></li>
+<li><strong>泛化与学习理论（你怎么解释“为什么能泛化”，以及怎么防过拟合&#x2F;数据泄漏）</strong></li>
+</ol>
+<p>外加一个“实战外挂”：<strong>谱分析&#x2F;随机矩阵&#x2F;高维概率</strong>（对理解注意力、初始化、尺度律很有帮助）。</p>
+<hr>
+<h2 id="路线总览（四阶段）"><a href="#路线总览（四阶段）" class="headerlink" title="路线总览（四阶段）"></a>路线总览（四阶段）</h2><ul>
+<li><strong>阶段 0：地基补齐（2–4 周）</strong></li>
+<li><strong>阶段 1：能看懂训练在干嘛（4–8 周）</strong></li>
+<li><strong>阶段 2：能推导、能诊断、能改算法（8–16 周）</strong></li>
+<li><strong>阶段 3：研究级视角与前沿工具（长期）</strong></li>
+</ul>
+<p>每阶段我都给：学习清单 + 练习任务（非常重要）+ 过关标准。</p>
+<hr>
+<h1 id="阶段-0：地基补齐（2–4-周）"><a href="#阶段-0：地基补齐（2–4-周）" class="headerlink" title="阶段 0：地基补齐（2–4 周）"></a>阶段 0：地基补齐（2–4 周）</h1><p>目标：看到 Transformer 的公式不眩晕，能熟练做矩阵微分和概率推导。</p>
+<h3 id="0-1-线性代数必修"><a href="#0-1-线性代数必修" class="headerlink" title="0.1 线性代数必修"></a>0.1 线性代数必修</h3><p>你需要的不是“解方程”，而是：</p>
+<ul>
+<li>向量空间、投影、正交、基变换</li>
+<li>矩阵乘法的几何意义（线性变换）</li>
+<li>特征值&#x2F;特征向量、SVD（奇异值分解）</li>
+<li>矩阵范数（尤其谱范数、Frobenius 范数）</li>
+<li>条件数（数值稳定性预告片）</li>
+</ul>
+<p><strong>练习任务</strong></p>
+<ul>
+<li>推导：最小二乘的闭式解 ( (X^\top X)^{-1}X^\top y )</li>
+<li>理解：SVD 为什么能解释“低秩近似”（这和 LoRA&#x2F;低秩适配有直觉关联）</li>
+</ul>
+<p><strong>过关标准</strong></p>
+<ul>
+<li>你能解释：为什么 Attention 是“带约束的加权平均&#x2F;投影”，而不仅是背公式。</li>
+</ul>
+<h3 id="0-2-微积分与矩阵微分"><a href="#0-2-微积分与矩阵微分" class="headerlink" title="0.2 微积分与矩阵微分"></a>0.2 微积分与矩阵微分</h3><ul>
+<li>链式法则（向量版本）</li>
+<li>Jacobian &#x2F; Hessian（至少知道是什么）</li>
+<li>常用矩阵导数：<br>( \partial |Ax-b|^2&#x2F;\partial x )、softmax、logsumexp、layernorm 里的导数结构</li>
+</ul>
+<p><strong>练习任务</strong></p>
+<ul>
+<li>手推：softmax + cross entropy 的梯度（经典必会）</li>
+<li>手推：线性层 (y &#x3D; Wx) 的反向传播</li>
+</ul>
+<p><strong>过关标准</strong></p>
+<ul>
+<li>你能“盲打”出：交叉熵对 logits 的梯度是 (p - y)。</li>
+</ul>
+<h3 id="0-3-概率统计入门（偏-ML）"><a href="#0-3-概率统计入门（偏-ML）" class="headerlink" title="0.3 概率统计入门（偏 ML）"></a>0.3 概率统计入门（偏 ML）</h3><ul>
+<li>随机变量、期望、方差、协方差</li>
+<li>常见分布（高斯、伯努利、多项式）</li>
+<li>最大似然估计（MLE）</li>
+<li>采样与蒙特卡洛直觉</li>
+</ul>
+<p><strong>练习任务</strong></p>
+<ul>
+<li>推导：高斯分布均值方差的 MLE</li>
+<li>解释：为什么 mini-batch 梯度是全梯度的无偏估计（以及方差意味着什么）</li>
+</ul>
+<hr>
+<h1 id="阶段-1：能看懂训练在干嘛（4–8-周）"><a href="#阶段-1：能看懂训练在干嘛（4–8-周）" class="headerlink" title="阶段 1：能看懂训练在干嘛（4–8 周）"></a>阶段 1：能看懂训练在干嘛（4–8 周）</h1><p>目标：你能用数学语言描述 Transformer&#x2F;LLM 的训练目标、梯度流、损失含义。</p>
+<h3 id="1-1-信息论（LLM-的“母语”）"><a href="#1-1-信息论（LLM-的“母语”）" class="headerlink" title="1.1 信息论（LLM 的“母语”）"></a>1.1 信息论（LLM 的“母语”）</h3><p>必须掌握：</p>
+<ul>
+<li>熵 (H)、交叉熵 (H(p,q))</li>
+<li>KL 散度 (D_{KL}(p|q))</li>
+<li>困惑度 PPL（其实就是交叉熵的指数形式）</li>
+<li>mutual information（了解即可）</li>
+</ul>
+<p><strong>你会突然看懂：</strong></p>
+<ul>
+<li>语言模型训练&#x3D;最小化数据分布与模型分布的交叉熵</li>
+<li>RLHF&#x2F;偏好优化里到处都是 KL 约束和“离原模型别太远”</li>
+</ul>
+<p><strong>练习任务</strong></p>
+<ul>
+<li>证明：最小化交叉熵等价于最小化 KL（差一个常数）</li>
+<li>把 PPL 和平均负对数似然联系起来</li>
+</ul>
+<h3 id="1-2-优化基础（SGD-为什么有效）"><a href="#1-2-优化基础（SGD-为什么有效）" class="headerlink" title="1.2 优化基础（SGD 为什么有效）"></a>1.2 优化基础（SGD 为什么有效）</h3><p>必须掌握：</p>
+<ul>
+<li>梯度下降、动量、Adam&#x2F;AdamW（本质：自适应预条件 + 动量）</li>
+<li>学习率、warmup、cosine decay 的数学&#x2F;直觉</li>
+<li>梯度噪声、batch size 与方差</li>
+<li>正则化（L2、weight decay、dropout 的概率解释）</li>
+</ul>
+<p><strong>练习任务</strong></p>
+<ul>
+<li>推导：L2 正则为何等价于高斯先验（MAP）</li>
+<li>分析：学习率太大为什么会发散（局部二次近似 + 谱半径直觉）</li>
+</ul>
+<h3 id="1-3-Transformer-数学拆解（必修核心）"><a href="#1-3-Transformer-数学拆解（必修核心）" class="headerlink" title="1.3 Transformer 数学拆解（必修核心）"></a>1.3 Transformer 数学拆解（必修核心）</h3><p>你要会写、会解释：</p>
+<ul>
+<li>attention：<br>( \mathrm{softmax}(QK^\top&#x2F;\sqrt{d})V )</li>
+<li>scaling (1&#x2F;\sqrt{d}) 的意义（控制方差，避免 softmax 饱和）</li>
+<li>residual + layernorm 为什么让深层网络更好训（梯度路径）</li>
+</ul>
+<p><strong>练习任务</strong></p>
+<ul>
+<li>推导：为什么不做 scaling 会导致 logits 方差随维度增长</li>
+<li>用线性代数解释：attention 是对 V 做“数据依赖的线性组合”</li>
+</ul>
+<p><strong>过关标准</strong></p>
+<ul>
+<li>你能把 attention 的每一项和“数值稳定性&#x2F;梯度”联系起来，而不是背公式。</li>
+</ul>
+<hr>
+<h1 id="阶段-2：能推导、能诊断、能改算法（8–16-周）"><a href="#阶段-2：能推导、能诊断、能改算法（8–16-周）" class="headerlink" title="阶段 2：能推导、能诊断、能改算法（8–16 周）"></a>阶段 2：能推导、能诊断、能改算法（8–16 周）</h1><p>目标：你能读论文、复现训练技巧，并且能解释“为什么这招有效&#x2F;何时无效”。</p>
+<h3 id="2-1-高级优化与训练动力学（大模型真正的坎）"><a href="#2-1-高级优化与训练动力学（大模型真正的坎）" class="headerlink" title="2.1 高级优化与训练动力学（大模型真正的坎）"></a>2.1 高级优化与训练动力学（大模型真正的坎）</h3><ul>
+<li>二阶信息的作用：Hessian、曲率、conditioning</li>
+<li>预条件（preconditioning）的概念：Adam 本质在干嘛</li>
+<li>梯度裁剪（clip）为什么稳定</li>
+<li>Loss landscape（非凸但仍可训练的原因：宽谷、过参数化）</li>
+</ul>
+<p><strong>练习任务</strong></p>
+<ul>
+<li>用 Hessian 的最大特征值解释：为什么需要学习率上限</li>
+<li>用 conditioning 解释：为什么 layernorm&#x2F;初始化很关键</li>
+</ul>
+<h3 id="2-2-数值分析（你想当高手，必须懂浮点）"><a href="#2-2-数值分析（你想当高手，必须懂浮点）" class="headerlink" title="2.2 数值分析（你想当高手，必须懂浮点）"></a>2.2 数值分析（你想当高手，必须懂浮点）</h3><p>大模型训练的很多“玄学”，其实是数值分析：</p>
+<ul>
+<li>FP16&#x2F;BF16&#x2F;FP8 的范围和舍入误差</li>
+<li>loss scaling（为什么能防 underflow）</li>
+<li>Kahan summation（了解即可）</li>
+<li>稳定 softmax（logsumexp trick）</li>
+<li>layernorm、rmsnorm 的稳定性差异</li>
+</ul>
+<p><strong>练习任务</strong></p>
+<ul>
+<li>手写并解释：稳定 softmax 的推导（减去 max）</li>
+<li>解释：为什么 BF16 比 FP16 更稳（指数位更多）</li>
+</ul>
+<h3 id="2-3-概率统计进阶（泛化与不确定性）"><a href="#2-3-概率统计进阶（泛化与不确定性）" class="headerlink" title="2.3 概率统计进阶（泛化与不确定性）"></a>2.3 概率统计进阶（泛化与不确定性）</h3><ul>
+<li>偏差-方差分解（至少理解）</li>
+<li>泛化误差、数据分布漂移</li>
+<li>似然、校准（calibration）、温度缩放（temperature）</li>
+<li>采样策略：top-k、top-p、temperature 的概率含义</li>
+</ul>
+<p><strong>练习任务</strong></p>
+<ul>
+<li>用概率视角解释：temperature 对分布熵的影响</li>
+<li>分析：top-p 为什么会比 top-k 更稳（在某些分布形状下）</li>
+</ul>
+<h3 id="2-4-表示学习与几何直觉（embedding-空间不是玄学）"><a href="#2-4-表示学习与几何直觉（embedding-空间不是玄学）" class="headerlink" title="2.4 表示学习与几何直觉（embedding 空间不是玄学）"></a>2.4 表示学习与几何直觉（embedding 空间不是玄学）</h3><ul>
+<li>表示空间的相似度（余弦、内积）</li>
+<li>各向异性（anisotropy）与“塌缩”</li>
+<li>低秩结构与适配（LoRA 的数学直觉）</li>
+<li>谱与稳定性（权重矩阵谱范数）</li>
+</ul>
+<p><strong>练习任务</strong></p>
+<ul>
+<li>用 SVD&#x2F;低秩近似解释：为什么 LoRA 有效（在很多任务上）</li>
+</ul>
+<hr>
+<h1 id="阶段-3：研究级视角与前沿工具（长期）"><a href="#阶段-3：研究级视角与前沿工具（长期）" class="headerlink" title="阶段 3：研究级视角与前沿工具（长期）"></a>阶段 3：研究级视角与前沿工具（长期）</h1><p>目标：你能把“工程现象”翻译成“数学问题”，并提出可验证的假设。</p>
+<h3 id="3-1-高维概率-随机矩阵（推荐）"><a href="#3-1-高维概率-随机矩阵（推荐）" class="headerlink" title="3.1 高维概率 &amp; 随机矩阵（推荐）"></a>3.1 高维概率 &amp; 随机矩阵（推荐）</h3><ul>
+<li>集中不等式（了解）：为什么高维里“平均值很稳定”</li>
+<li>随机初始化下的谱分布直觉</li>
+<li>注意力矩阵的谱性质（一些前沿分析会用到）</li>
+</ul>
+<h3 id="3-2-学习理论（够用即可，不必钻牛角尖）"><a href="#3-2-学习理论（够用即可，不必钻牛角尖）" class="headerlink" title="3.2 学习理论（够用即可，不必钻牛角尖）"></a>3.2 学习理论（够用即可，不必钻牛角尖）</h3><ul>
+<li>PAC、Rademacher、VC（知道大意）</li>
+<li>double descent（过参数化也能泛化）</li>
+<li>implicit bias（优化器本身带来的偏好）</li>
+</ul>
+<h3 id="3-3-信息几何-变分推断（可选）"><a href="#3-3-信息几何-变分推断（可选）" class="headerlink" title="3.3 信息几何&#x2F;变分推断（可选）"></a>3.3 信息几何&#x2F;变分推断（可选）</h3><ul>
+<li>KL 的几何意义</li>
+<li>变分推断（ELBO）</li>
+<li>这条线对理解某些生成建模和对齐方法有帮助</li>
+</ul>
+<hr>
+<h2 id="一条“最实用”的学习顺序（你照着走就行）"><a href="#一条“最实用”的学习顺序（你照着走就行）" class="headerlink" title="一条“最实用”的学习顺序（你照着走就行）"></a>一条“最实用”的学习顺序（你照着走就行）</h2><p>如果你不想被选择困难症折磨，按这个顺序：</p>
+<ol>
+<li><strong>线代（SVD&#x2F;范数&#x2F;投影）</strong></li>
+<li><strong>矩阵微分（softmax+CE 必会）</strong></li>
+<li><strong>概率统计（MLE、期望方差、无偏估计）</strong></li>
+<li><strong>信息论（交叉熵&#x2F;KL&#x2F;PPL）</strong></li>
+<li><strong>优化（SGD&#x2F;AdamW、LR schedule、conditioning）</strong></li>
+<li><strong>数值分析（FP16&#x2F;BF16、稳定 softmax、loss scaling）</strong></li>
+<li><strong>高维概率&#x2F;随机矩阵（研究向加速包）</strong></li>
+</ol>
+<hr>
+<h2 id="每周训练法（比“看书”有效得多）"><a href="#每周训练法（比“看书”有效得多）" class="headerlink" title="每周训练法（比“看书”有效得多）"></a>每周训练法（比“看书”有效得多）</h2><p>你想成为高手，关键不是看多少，而是<strong>每周都能产出“推导+实验”</strong>。</p>
+<p>每周固定做三件事：</p>
+<ol>
+<li><strong>推导一个公式</strong>（比如 softmax 梯度、layernorm 的稳定写法）</li>
+<li><strong>做一个小实验</strong>（改一个超参或一处数值实现，看曲线&#x2F;速度&#x2F;稳定性）</li>
+<li><strong>写一页结论</strong>：现象→假设→验证→结论（训练自己科学思维）</li>
+</ol>
+<hr>
+<h2 id="你会在某一天突然“开窍”的-10-个标志"><a href="#你会在某一天突然“开窍”的-10-个标志" class="headerlink" title="你会在某一天突然“开窍”的 10 个标志"></a>你会在某一天突然“开窍”的 10 个标志</h2><p>当你能做到这些，你基本就是“高手轨道”了：</p>
+<ul>
+<li>看到训练崩溃，你先想的是：学习率、尺度、数值范围、梯度范数、激活分布</li>
+<li>你会看 logits 的方差&#x2F;分布，而不只看 loss</li>
+<li>你知道为什么要 (1&#x2F;\sqrt{d}) 缩放 attention</li>
+<li>你能解释 AdamW 的 weight decay 为何和 L2 不完全等价</li>
+<li>你知道 BF16&#x2F;FP16 各自的坑，并能选择合适的 loss scaling</li>
+<li>你能用 KL&#x2F;交叉熵解释 RLHF 里的约束项</li>
+<li>你能从谱范数&#x2F;conditioning 解释“为什么这层很难训”</li>
+<li>你能把一个工程 trick 翻译成一个数学目标或约束</li>
+<li>你能设计消融实验来验证自己的假设</li>
+<li>你能读论文时区分“定义”“结论”“假设”“证据”四件事</li>
+</ul>
+<hr>
+<h2 id="最后：这条路线与你的算子优化完全互补"><a href="#最后：这条路线与你的算子优化完全互补" class="headerlink" title="最后：这条路线与你的算子优化完全互补"></a>最后：这条路线与你的算子优化完全互补</h2><p>你前面在搞 CUDA kernel&#x2F;算子优化，这是“硬件与数值现实”。<br>数学路线会让你在做优化时更有方向，比如：</p>
+<ul>
+<li>为什么要用稳定 softmax（数值分析 + 信息论）</li>
+<li>为什么 attention 的缩放影响稳定性（方差传播）</li>
+<li>为什么 layernorm 的实现方式影响训练（优化 + 数值）</li>
+<li>为什么某些融合会改变误差（浮点舍入与累加）</li>
+</ul>
+<p>这就是“高手味儿”：不是只会调参或只会写 kernel，而是能把它们统一在同一张地图上。</p>
+<p>如果你希望我把这条路线进一步“具体化成一份 12 周课程表”（每周学哪些章节、做哪些推导和实验、验收标准是什么），我可以直接给你一版按 LLM 方向定制的计划，不需要你补充任何信息。</p>
 
                 
             </div>
@@ -441,7 +639,7 @@ nanovllmsampling_para">
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://hhelloe.github.io/2026/01/14/nano%20vllm%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/">http://hhelloe.github.io/2026/01/14/nano%20vllm%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/</a>
+                    <a href="http://hhelloe.github.io/2026/01/15/%E6%95%B0%E5%AD%A6%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/">http://hhelloe.github.io/2026/01/15/%E6%95%B0%E5%AD%A6%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -800,13 +998,13 @@ nanovllmsampling_para">
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2026/01/14/future/">
+                <a href="/2026/01/15/%E7%BA%BF%E6%80%A7%E4%BB%A3%E6%95%B0/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="to learn">
+                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="线性代数">
                         
-                        <span class="card-title">to learn</span>
+                        <span class="card-title">线性代数</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -817,7 +1015,7 @@ nanovllmsampling_para">
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2026-01-14
+                            <i class="far fa-clock fa-fw icon-date"></i>2026-01-15
                         </span>
                         <span class="publish-author">
                             
@@ -837,13 +1035,13 @@ nanovllmsampling_para">
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2026/01/12/MeshFormer%E8%AE%BA%E6%96%87%E8%A7%A3%E8%AF%BB/">
+                <a href="/2026/01/15/%E7%AC%AC%E4%B8%80%E6%AC%A1%E7%AE%97%E5%AD%90%E4%BC%98%E5%8C%96/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="MeshFormer论文解读">
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
                         
-                        <span class="card-title">MeshFormer论文解读</span>
+                        <span class="card-title"></span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -854,7 +1052,7 @@ nanovllmsampling_para">
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2026-01-12
+                                <i class="far fa-clock fa-fw icon-date"></i>2026-01-15
                             </span>
                         <span class="publish-author">
                             
@@ -863,22 +1061,6 @@ nanovllmsampling_para">
                             
                         </span>
                     </div>
-                </div>
-                
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/Voxel/">
-                        <span class="chip bg-color">Voxel</span>
-                    </a>
-                    
-                    <a href="/tags/normal/">
-                        <span class="chip bg-color">normal</span>
-                    </a>
-                    
-                    <a href="/tags/Mesh%E7%94%9F%E6%88%90/">
-                        <span class="chip bg-color">Mesh生成</span>
-                    </a>
-                    
                 </div>
                 
             </div>
