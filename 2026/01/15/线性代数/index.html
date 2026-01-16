@@ -5,9 +5,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="keywords" content="线性代数, blog of hhelloe">
-    <meta name="description" content="稍微回顾线性代数得到了一些以前我没搞懂或者我看的教学视频&amp;#x2F;文章没说清楚的结论
-矩阵乘法举例：
-| a11  a12 |   | x11 |   &amp;#x3D;   | a11x11 + a12x21 || a21  a22 |   ">
+    <meta name="description" content="稍微回顾线性代数得到了一些以前我没搞懂或者我看的教学视频&amp;#x2F;文章没说清楚的结论矩阵乘法举例：
+| a11  a12 |   | x11 |   &amp;#x3D;   | a11x11 + a12x21 || a21  a22 |   |">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -396,11 +395,10 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>稍微回顾线性代数得到了一些以前我没搞懂或者我看的教学视频&#x2F;文章没说清楚的结论</p>
-<p><strong>矩阵乘法举例：</strong></p>
+                <h2 id="稍微回顾线性代数得到了一些以前我没搞懂或者我看的教学视频-文章没说清楚的结论"><a href="#稍微回顾线性代数得到了一些以前我没搞懂或者我看的教学视频-文章没说清楚的结论" class="headerlink" title="稍微回顾线性代数得到了一些以前我没搞懂或者我看的教学视频&#x2F;文章没说清楚的结论"></a>稍微回顾线性代数得到了一些以前我没搞懂或者我看的教学视频&#x2F;文章没说清楚的结论</h2><p><strong>矩阵乘法举例：</strong></p>
 <p>| a11  a12 |   | x11 |   &#x3D;   | a11<em>x11 + a12</em>x21 |<br>| a21  a22 |   | x21 |       | a21<em>x11 + a22</em>x21 |<br>| a31  a32 |                 | a31<em>x11 + a32</em>x21 |</p>
 <p>当初没有找到一个直观理解这种矩阵乘法在几何意义里的方式<br>现在看来假设x11和x21是一个平面坐标的(1,0)和(0,1)的话，那么这个乘法就相当于把x11和x21变成了(a11+a21+a31,0)和(0,a12+a22+a32)<br>x11或x21某坐标不为0的话乘以它的行数对应的投影矩阵的列数即可得到变换后的坐标，每一行实际上是把原基向量投影到变换后的基向量上，就这样转换了基向量的坐标<br>所以矩阵乘法就是通过基向量的变换来构造新的向量</p>
-
+<h2 id="特征值和特征矩阵"><a href="#特征值和特征矩阵" class="headerlink" title="特征值和特征矩阵"></a>特征值和特征矩阵</h2>
                 
             </div>
             <hr/>

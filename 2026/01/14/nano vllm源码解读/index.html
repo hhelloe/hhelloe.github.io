@@ -7,7 +7,7 @@
     <meta name="keywords" content="nona vllm源码解读 (未完成), blog of hhelloe">
     <meta name="description" content="题主代码只会一些基本语法和刷了几道算法题的程度，直接嗯看代码实在是困难，于是采用这种笨方法边学边记录每一块的功能
 就先局部局部的看着吧，知道每一块干嘛的，之后我再另写一篇看能不能从全局上有什么收获
-nanovllmsampling_para">
+我觉得我应该听听ai提供的学习路线建议，v">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -398,12 +398,14 @@ nanovllmsampling_para">
             <div id="articleContent">
                 <p>题主代码只会一些基本语法和刷了几道算法题的程度，直接嗯看代码实在是困难，于是采用这种笨方法边学边记录每一块的功能</p>
 <p>就先局部局部的看着吧，知道每一块干嘛的，之后我再另写一篇看能不能从全局上有什么收获</p>
-<h2 id="nanovllm"><a href="#nanovllm" class="headerlink" title="nanovllm"></a>nanovllm</h2><h3 id="sampling-params-py"><a href="#sampling-params-py" class="headerlink" title="sampling_params.py"></a>sampling_params.py</h3><p>@dataclass 声明类的核心目的是装数据，而非藏逻辑</p>
+<h1 id="我觉得我应该听听ai提供的学习路线建议，vllm的源码解读等回家了在wsl上学习好了"><a href="#我觉得我应该听听ai提供的学习路线建议，vllm的源码解读等回家了在wsl上学习好了" class="headerlink" title="我觉得我应该听听ai提供的学习路线建议，vllm的源码解读等回家了在wsl上学习好了"></a>我觉得我应该听听ai提供的学习路线建议，vllm的源码解读等回家了在wsl上学习好了</h1><h2 id="nanovllm"><a href="#nanovllm" class="headerlink" title="nanovllm"></a>nanovllm</h2><h3 id="sampling-params-py"><a href="#sampling-params-py" class="headerlink" title="sampling_params.py"></a>sampling_params.py</h3><p>@dataclass 声明类的核心目的是装数据，而非藏逻辑</p>
 <p>其内只有一个类SamplingParams<br>初始化了temperature、max_tokens和ignore_eox 并规定了temperature的最小值</p>
 <h2 id="engine"><a href="#engine" class="headerlink" title="engine"></a>engine</h2><h3 id="model-runner"><a href="#model-runner" class="headerlink" title="model_runner"></a>model_runner</h3><h3 id="block-manager"><a href="#block-manager" class="headerlink" title="block_manager"></a>block_manager</h3><h4 id="Block"><a href="#Block" class="headerlink" title="Block"></a>Block</h4><p>init<br>block_id,ref_count,hash,token_ids</p>
 <p>update<br>更新hash和token_ids</p>
 <p>reset</p>
-<h4 id="BlockManager"><a href="#BlockManager" class="headerlink" title="BlockManager"></a>BlockManager</h4><p>init<br>初始化block_size，block池，hash和block索引表等<br>\\\\\to be continued\\</p>
+<h4 id="BlockManager"><a href="#BlockManager" class="headerlink" title="BlockManager"></a>BlockManager</h4><p>init<br>初始化block_size，block池，hash和block索引表等</p>
+<p>compute_hash<br>把输入编码转换为字节流<br>返回哈希流的整数形式</p>
+<p> _allocate_block</p>
 <h3 id="sequence"><a href="#sequence" class="headerlink" title="sequence"></a>sequence</h3><h4 id="Class-SequenceStatus"><a href="#Class-SequenceStatus" class="headerlink" title="Class SequenceStatus"></a>Class SequenceStatus</h4><p>定义Sequence的合法生命周期状态(WAITTING,RUNNING,FINISHED)</p>
 <h4 id="Sequence"><a href="#Sequence" class="headerlink" title="Sequence"></a>Sequence</h4><p>init<br>给每个seq_id分配唯一递增id，规定status，初始化变量等</p>
 <p>@property 调用函数不需要加括号，像是在访问属性一样，语义上为状态。def了很多函数，把计算的结果伪装成字段一样的属性</p>
