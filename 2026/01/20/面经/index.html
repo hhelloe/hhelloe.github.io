@@ -400,26 +400,38 @@
 <h2 id="对于模型训练过程中，如果出现样本标签数据分布极其不均衡，通常会采取什么方法来解决问题"><a href="#对于模型训练过程中，如果出现样本标签数据分布极其不均衡，通常会采取什么方法来解决问题" class="headerlink" title="对于模型训练过程中，如果出现样本标签数据分布极其不均衡，通常会采取什么方法来解决问题"></a>对于模型训练过程中，如果出现样本标签数据分布极其不均衡，通常会采取什么方法来解决问题</h2><h3 id="问题本质"><a href="#问题本质" class="headerlink" title="问题本质"></a>问题本质</h3><p>loss会被多数类主导，会使得模型只要学会猜多数类就能得高分<br>所以核心目的是：让模型在训练时多关心少数类</p>
 <h3 id="解决方式"><a href="#解决方式" class="headerlink" title="解决方式"></a>解决方式</h3><h4 id="数据层面"><a href="#数据层面" class="headerlink" title="数据层面"></a>数据层面</h4><p>1.过采样（oversampling）<br>重复采样少数类样本或用数据增强制造新样本</p>
 <p>缺点：重复样本容易导致过拟合，增强不合理会引入噪声</p>
-<p>2.欠采样（Undersampling）<br>随机丢弃多数类样本</p>
+<p>2.欠采样（Undersampling）<br>随机丢弃多数类样本<br>只适用于数据量极大时</p>
 <p>3.合成样本(例如SMOTE算法，即Synthetic Minority Oversampling Technique合成少数过采样算法)<br>在特征空间用特殊算法合成少数类样本</p>
 <p>比直接复制好，对比之下也能缓解过拟合，但仍然有过拟合的可能<br>如果少数类样本和多数类样本在特征空间中存在大量重叠,SMOTE合成的新样本可能会落入多数类样本呢区域，反而加剧了样本的混淆</p>
 <h4 id="损失函数层面"><a href="#损失函数层面" class="headerlink" title="损失函数层面"></a>损失函数层面</h4><p>1.类别加权（Class weighting）<br>在loss里给少数类更大的权重</p>
 <p>例如L&#x3D;-w_y log{p(y)}<br>让w_y和1&#x2F;freq(y)成比例</p>
 <p>常用，但权重过大容易造成训练不稳定，需要调参</p>
-<p>2.Focal loss<br>L &#x3D; -(1-p_y)^γ log{p(y)}<br>难样本权重大，易样本自动降权<br>但会多一个超参并且对概念校准有影响</p>
+<p>2.Focal loss<br>L &#x3D; -(1-p_y)^γ log{p(y)}<br>难样本权重大，易样本自动降权<br>但会多一个超参并且对概率校准有影响</p>
 <h4 id="采样策略层面"><a href="#采样策略层面" class="headerlink" title="采样策略层面"></a>采样策略层面</h4><p>1.Balanced mini-batch<br>每个batch强制类别均衡</p>
 <p>2.两阶段训练 （coarse-&gt;fine）<br>stage 1：均衡采样，学区分能力<br>stage 2：按真实分布微调</p>
-<p>高风险任务常见，不过太复杂</p>
+<p>高风险任务常见，但训练流程与调参复杂度较高</p>
 <h2 id="self-attention"><a href="#self-attention" class="headerlink" title="self-attention"></a>self-attention</h2><p>假设我有一串tokens<br>X &#x3D; [x1,x2,x3,x4,…,xN]<br>每个xi代表模型当前层的token表示，包含内容信息和位置编码</p>
 <p>X通过对应的投影矩阵，即W_Q,W_K,W_V相乘得到三种线性变换视角Q、K、V<br>Q(Query，查询),站在当前token的视角，表示“我关心什么样的信息”<br>K(Key),站在被查询token的视角，表示“我具备什么样的特征”<br>V(Value),真正被聚合&#x2F;加权的信息，表示“如果你选我，我给你什么”</p>
 <p>例如(QK^T)_{ij} &#x3D; (q_i)^T k_j含义为：<br>token i问：token j和我关心的东西有多相关？</p>
-<p>之后对这样的权重用softmax后与V矩阵相乘给每个token生成一个新的表示向量（分配注意力）</p>
-<h2 id="transformer的感受野encoder中是可以看到所有的token的，你认为感受野越大越好还是越小越好"><a href="#transformer的感受野encoder中是可以看到所有的token的，你认为感受野越大越好还是越小越好" class="headerlink" title="transformer的感受野encoder中是可以看到所有的token的，你认为感受野越大越好还是越小越好"></a>transformer的感受野encoder中是可以看到所有的token的，你认为感受野越大越好还是越小越好</h2><h3 id="感受野太大的问题"><a href="#感受野太大的问题" class="headerlink" title="感受野太大的问题"></a>感受野太大的问题</h3><p>1.self-attn本质是加权平均，在噪声很大的早期就用的话会导致细节被大量无关token稀释，模型会更倾向于整体统计而不是局部几何<br>2.token多-&gt;attention成本爆炸<br>可能会：被迫用更大patch，减少层数<br>3.噪声环境下，全局attention会把噪声彼此传播</p>
+<p>之后对这样的权重按行用softmax后与V矩阵相乘给每个token生成一个新的表示向量（分配注意力）</p>
+<h2 id="transformer的感受野encoder中是可以看到所有的token的，你认为感受野越大越好还是越小越好"><a href="#transformer的感受野encoder中是可以看到所有的token的，你认为感受野越大越好还是越小越好" class="headerlink" title="transformer的感受野encoder中是可以看到所有的token的，你认为感受野越大越好还是越小越好"></a>transformer的感受野encoder中是可以看到所有的token的，你认为感受野越大越好还是越小越好</h2><h3 id="感受野太大的问题"><a href="#感受野太大的问题" class="headerlink" title="感受野太大的问题"></a>感受野太大的问题</h3><p>1.self-attn本质是加权平均，在噪声很大的早期（高时间步）就用的话会导致细节被大量无关token稀释，模型会更倾向于整体统计而不是局部几何<br>2.token多-&gt;attention成本爆炸<br>可能会：被迫用更大patch，减少层数<br>3.噪声环境下，全局attention会把噪声彼此传播</p>
 <h3 id="感受野太小的问题"><a href="#感受野太小的问题" class="headerlink" title="感受野太小的问题"></a>感受野太小的问题</h3><p>1.学不到全局一致性，例如人脸五官不错但比例和位置怪<br>2.类别、关系、结构一致性等高层语义需要全局属性</p>
 <h3 id="解决措施"><a href="#解决措施" class="headerlink" title="解决措施"></a>解决措施</h3><p>分层、分尺度、分阶段<br>1.底层小，高层大<br>2.高分辨率局部，低分辨率全局<br>3.diffusion不同时间步不同感受野</p>
-<h2 id="位置编码-sin-cos，正余弦，bert可学习位置编码，rope相比于正余弦编码的优势"><a href="#位置编码-sin-cos，正余弦，bert可学习位置编码，rope相比于正余弦编码的优势" class="headerlink" title="位置编码:sin cos，正余弦，bert可学习位置编码，rope相比于正余弦编码的优势"></a>位置编码:sin cos，正余弦，bert可学习位置编码，rope相比于正余弦编码的优势</h2><h3 id="正余弦位置编码"><a href="#正余弦位置编码" class="headerlink" title="正余弦位置编码"></a>正余弦位置编码</h3><p>为每个token的每个维度按公式计算一个cos&#x2F;sin值，每个token都能得到一个和维度数量相同的向量来表达位置。本质是绝对位置，每个token都带着自己是第几位的标签，不能显式表示token之间的相对位置，需要模型从绝对位置向量里学出来。<br>然后我个人认为这种方式对长上下文的泛化性不一定好，上下文超过训练长度会出问题，绝对位置表示可能很难让模型理解超出训练长度的位置</p>
+<h2 id="位置编码-sin-cos，正余弦，bert可学习位置编码，rope相比于正余弦编码的优势"><a href="#位置编码-sin-cos，正余弦，bert可学习位置编码，rope相比于正余弦编码的优势" class="headerlink" title="位置编码:sin cos，正余弦，bert可学习位置编码，rope相比于正余弦编码的优势"></a>位置编码:sin cos，正余弦，bert可学习位置编码，rope相比于正余弦编码的优势</h2><h3 id="正余弦位置编码"><a href="#正余弦位置编码" class="headerlink" title="正余弦位置编码"></a>正余弦位置编码</h3><p>为每个token的每个维度按公式计算一个cos&#x2F;sin值，每个token都能得到一个和维度数量相同的向量来表达位置。本质是绝对位置，每个token都带着自己是第几位的标签，不能显式表示token之间的相对位置关系，需要模型从绝对位置向量间接学习。<br>我认为这种绝对位置编码对超出训练长度的长上下文泛化往往不稳定，上下文超过训练长度会出问题，绝对位置表示可能很难让模型理解超出训练长度的位置</p>
 <h3 id="bert的可学习位置编码"><a href="#bert的可学习位置编码" class="headerlink" title="bert的可学习位置编码"></a>bert的可学习位置编码</h3><p>同样是绝对位置，不过会为每一个位置pos直接学一个向量，这个向量在模型里会学习会更新</p>
-<h3 id="RoPE"><a href="#RoPE" class="headerlink" title="RoPE"></a>RoPE</h3>
+<h3 id="RoPE-Rotary-Positional-Embedding-旋转位置编码"><a href="#RoPE-Rotary-Positional-Embedding-旋转位置编码" class="headerlink" title="RoPE(Rotary Positional Embedding,旋转位置编码)"></a>RoPE(Rotary Positional Embedding,旋转位置编码)</h3><p>RoPE把位置变成一种几何变换：位置越靠后，向量在某些二维子空间里旋转得越多<br>对Q和K做“按位置旋转”，让注意力的点积天然带上相对位置信息</p>
+<p>优势：<br>1.相对位置信息天然进入注意力，结果会依赖相对距离i-j，模型会更容易学到近的&#x2F;远的相关、周期性结构等相对模式<br>2.长上下文泛化通常更强，因为用的相对关系，比绝对位置的可迁移性强很多<br>3.不需要额外的可学习参数<br>4.相加式位置会改变每个token的表示本身，RoPE 通过对 Q&#x2F;K 做旋转来影响相似度计算，而不改变 token 的模长，更贴合 attention 基于几何相似度的本质</p>
+<h2 id="欠拟合和过拟合定义，通常如何解决"><a href="#欠拟合和过拟合定义，通常如何解决" class="headerlink" title="欠拟合和过拟合定义，通常如何解决?"></a>欠拟合和过拟合定义，通常如何解决?</h2><h3 id="欠拟合"><a href="#欠拟合" class="headerlink" title="欠拟合"></a>欠拟合</h3><p>模型无法充分学习训练数据中的模式，本身能力不足</p>
+<p>核心思路：增强模型的学习能力</p>
+<p>增大模型容量（更深&#x2F;更宽）<br>使用更强的特征表示（更好的 embedding、引入 attention）<br>训练更久（增加 epoch）<br>减弱正则化（降低 dropout、weight decay）<br>调大学习率（在合理范围内）</p>
+<h3 id="过拟合"><a href="#过拟合" class="headerlink" title="过拟合"></a>过拟合</h3><p>模型过度拟合训练数据，学习了噪声和偶然性，泛化能力差</p>
+<p>核心思路：限制模型记忆噪声，提升泛化<br>增加数据量或做数据增强</p>
+<p>加强正则化（dropout、L2、label smoothing）<br>使用 early stopping<br>减小模型容量<br>使用 ensemble（模型集成）<br>合理划分训练&#x2F;验证集，避免数据泄漏</p>
+<h2 id="transformer的位置编码的基底是10000为什么设置10000"><a href="#transformer的位置编码的基底是10000为什么设置10000" class="headerlink" title="transformer的位置编码的基底是10000为什么设置10000"></a>transformer的位置编码的基底是10000为什么设置10000</h2><p>10000的作用就是让波长从几步覆盖到大约几万步的量级</p>
+<p>Transformer的典型设计d&#x3D;512，序列长度常见在几百几千，用10000作为基底刚刚好，低维（高频）负责局部结构，高维（低频）负责长距离结构</p>
+<p>10000不是必须的，只是默认基底，换别的也可以工作<br>基底变小，比如1000，整体更偏高频，更敏感短距离，但长距离表示能力变差<br>基底变大，比如100000，整体更偏低频，更强调长聚集，近距离分辨率可能变弱</p>
+<p>所以10000只是一个在常见序列长度范围内经验上稳定、实现上方便的选择。</p>
+
                 
             </div>
             <hr/>
