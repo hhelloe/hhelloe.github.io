@@ -450,7 +450,15 @@
 <h3 id="注意点"><a href="#注意点" class="headerlink" title="注意点"></a>注意点</h3><p>值得注意的是，GraphRAG虽然是RAG的扩展版，但应根据应用场景不同选择使用对象，而不是单纯认为GraphRAG就比RAG好。</p>
 <p>GraphRAG离线构建成本高，图质量依赖于抽取准确率。在问简单事实问题时不如RAG</p>
 <p>RAG最爱用的Top-K 向量搜索是“相似度驱动”，GraphRAG 是“结构驱动”。前者回答“哪段话最像问题”，后者回答“哪些对象和关系与问题有关”</p>
-<h2 id="为什么现在-Decoder-only-成为大模型的主流架构"><a href="#为什么现在-Decoder-only-成为大模型的主流架构" class="headerlink" title="为什么现在 Decoder - only 成为大模型的主流架构"></a>为什么现在 Decoder - only 成为大模型的主流架构</h2>
+<h2 id="为什么现在-Decoder-only-成为大模型的主流架构"><a href="#为什么现在-Decoder-only-成为大模型的主流架构" class="headerlink" title="为什么现在 Decoder - only 成为大模型的主流架构"></a>为什么现在 Decoder - only 成为大模型的主流架构</h2><h3 id="不同的架构主要都是在做什么"><a href="#不同的架构主要都是在做什么" class="headerlink" title="不同的架构主要都是在做什么"></a>不同的架构主要都是在做什么</h3><p>Encoder-only适用于学习&#x2F;理解语义，如将擅长对文本内容进行分析、分类，包括情感分析，更偏判别和表示，不适合自由生成等<br>Encoder-Decoder适用于条件生成，主要用于NLP，擅长处理输入和输出序列之前存在复杂映射关系的任务，比如翻译、摘要<br>Decoder-only在位置position上使用到了mask（保证自回归），相当于去掉encoder和cross attn，保留decoder block的Encoder-Decoder架构</p>
+<h3 id="为什么“Decoder-only”成为了主流"><a href="#为什么“Decoder-only”成为了主流" class="headerlink" title="为什么“Decoder-only”成为了主流"></a>为什么“Decoder-only”成为了主流</h3><p>Encoder-Decoder最早解决的是：明确 输入-&gt;输出，这么一条路<br>后来发现Decoder-only把输入也当成要生成的一部分即可，于是prompt token和answer token就统一成了一条序列，满足自回归的生成方式<br>介于decoder什么都能统一成next-token prediction的特性，其泛用面广，可以将多种任务统一成一种格式，如翻译、问答、对话 等。虽然encoder-decoder也能做，但天然具有局限性。<br>世界上最多的数据不是QA对也不是翻译对，而是连续文本，decoder-only的预训练不需要任何标注就能做到，并且自回归和kv cache十分契合。</p>
+<p>所以decoder-only赢的不是结构，而是范式，不过它只是通用大模型的目前最优解。在翻译、检索、表示学习等领域另外两种架构依然健在。</p>
+<p>trade-off:Decoder-only 在条件生成和对齐复杂输入时，结构表达不如 Encoder–Decoder 直接，但工程统一性更重要</p>
+<h2 id="了解过哪些模型训练优化的方法"><a href="#了解过哪些模型训练优化的方法" class="headerlink" title="了解过哪些模型训练优化的方法"></a>了解过哪些模型训练优化的方法</h2><h3 id="并行与切分"><a href="#并行与切分" class="headerlink" title="并行与切分"></a>并行与切分</h3><p>数据并行（DP）：最基础，多卡分batch，同步梯度<br>张量并行（TP）：把矩阵乘按维度切到多卡（如QKV，FFN的线性层分片）<br>流水线并行（PP）：按层切，像装配线一样跑micro-batch<br>ZeRO：把optimizer state&#x2F;gradients&#x2F;parameters分片，显存降很多<br>3D并行:DP+TP+PP组合，大模型训练标配思路</p>
+<h3 id="训练时在省什么内存"><a href="#训练时在省什么内存" class="headerlink" title="训练时在省什么内存"></a>训练时在省什么内存</h3><p>Parameter（参数），模型权重W<br>Gradient（梯度），▽W<br>Optimizer states（优化器状态），比如Adam的一阶&#x2F;二阶矩m，v<br>Activations（激活&#x2F;中间结果）：前向为了反向要保存的中间张量</p>
+<p>不同并行策略主要在这四类上做取舍</p>
+<h3 id="显存优化：主要对付激活和optimizer-states"><a href="#显存优化：主要对付激活和optimizer-states" class="headerlink" title="显存优化：主要对付激活和optimizer states"></a>显存优化：主要对付激活和optimizer states</h3><p>Activation checkpointing：不存中间激活，反向时重算，省显存换算力（看到这里的时候在想，我去，这不就是flash-attn的做法么，实际上不然，flash-attn是只保留少量统计量在需要时局部算P；这里这个方法是保存一个检查点，反向需要的时候从检查点开始前向重新算一遍）<br>Offload：把optimizer state或参数挪到CPU&#x2F;SSD，吞吐会受影响但能训更大的模型</p>
+<h2 id="了解过哪些模型推理优化的方法"><a href="#了解过哪些模型推理优化的方法" class="headerlink" title="了解过哪些模型推理优化的方法"></a>了解过哪些模型推理优化的方法</h2>
                 
             </div>
             <hr/>
