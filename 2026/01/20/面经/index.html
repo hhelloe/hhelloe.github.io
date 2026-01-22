@@ -421,6 +421,7 @@
 <h3 id="bert的可学习位置编码"><a href="#bert的可学习位置编码" class="headerlink" title="bert的可学习位置编码"></a>bert的可学习位置编码</h3><p>同样是绝对位置，不过会为每一个位置pos直接学一个向量，这个向量在模型里会学习会更新</p>
 <h3 id="RoPE-Rotary-Positional-Embedding-旋转位置编码"><a href="#RoPE-Rotary-Positional-Embedding-旋转位置编码" class="headerlink" title="RoPE(Rotary Positional Embedding,旋转位置编码)"></a>RoPE(Rotary Positional Embedding,旋转位置编码)</h3><p>RoPE把位置变成一种几何变换：位置越靠后，向量在某些二维子空间里旋转得越多<br>对Q和K做“按位置旋转”，让注意力的点积天然带上相对位置信息</p>
 <p>优势：<br>1.相对位置信息天然进入注意力，结果会依赖相对距离i-j，模型会更容易学到近的&#x2F;远的相关、周期性结构等相对模式<br>2.长上下文泛化通常更强，因为用的相对关系，比绝对位置的可迁移性强很多<br>3.不需要额外的可学习参数<br>4.相加式位置会改变每个token的表示本身，RoPE 通过对 Q&#x2F;K 做旋转来影响相似度计算，而不改变 token 的模长，更贴合 attention 基于几何相似度的本质</p>
+<h3 id="补充-相对位置编码ALiBi"><a href="#补充-相对位置编码ALiBi" class="headerlink" title="补充 相对位置编码ALiBi"></a>补充 相对位置编码ALiBi</h3><p>对logits做距离越大就衰减越多的bias，softmax 之后，这个线性惩罚会变成 指数级的衰减</p>
 <h2 id="欠拟合和过拟合定义，通常如何解决"><a href="#欠拟合和过拟合定义，通常如何解决" class="headerlink" title="欠拟合和过拟合定义，通常如何解决?"></a>欠拟合和过拟合定义，通常如何解决?</h2><h3 id="欠拟合"><a href="#欠拟合" class="headerlink" title="欠拟合"></a>欠拟合</h3><p>模型无法充分学习训练数据中的模式，本身能力不足</p>
 <p>核心思路：增强模型的学习能力</p>
 <p>增大模型容量（更深&#x2F;更宽）<br>使用更强的特征表示（更好的 embedding、引入 attention）<br>训练更久（增加 epoch）<br>减弱正则化（降低 dropout、weight decay）<br>调大学习率（在合理范围内）</p>
@@ -431,7 +432,25 @@
 <p>Transformer的典型设计d&#x3D;512，序列长度常见在几百几千，用10000作为基底刚刚好，低维（高频）负责局部结构，高维（低频）负责长距离结构</p>
 <p>10000不是必须的，只是默认基底，换别的也可以工作<br>基底变小，比如1000，整体更偏高频，更敏感短距离，但长距离表示能力变差<br>基底变大，比如100000，整体更偏低频，更强调长聚集，近距离分辨率可能变弱</p>
 <p>所以10000只是一个在常见序列长度范围内经验上稳定、实现上方便的选择。</p>
-
+<h2 id="讲一下-FlashAttention-的思想和做法"><a href="#讲一下-FlashAttention-的思想和做法" class="headerlink" title="讲一下 FlashAttention 的思想和做法"></a>讲一下 FlashAttention 的思想和做法</h2><h3 id="原始attention的瓶颈"><a href="#原始attention的瓶颈" class="headerlink" title="原始attention的瓶颈"></a>原始attention的瓶颈</h3><p>在GPU上，真正拖慢的是内存访问</p>
+<p>在标准实现中：<br>显式构造QK^T后写进HBM（显存）<br>从HBM读出来QK^T做softmax再写进HBM<br>从HBM读出来结果再乘V</p>
+<p>中间结果大且短命、又反复进出显存</p>
+<h3 id="Flash-attn的改进"><a href="#Flash-attn的改进" class="headerlink" title="Flash-attn的改进"></a>Flash-attn的改进</h3><p>不存下QK^T，而是边算边softmax边乘V，加速主要来自更少的显存读写<br>Attention可以分块并且结果依然严格等价，因为softmax可以在线计算</p>
+<p>最终计算需要维护的有:<br>按行：QK^T&#x2F;根号d_k最大值(e^x中的x最大值)，用于在计算时在指数位被减去，维持范围可控<br>分子 and 分母累计（分子是一个向量，分母是标量）<br>在分块时如果发现了更大的x，那么之前累计的分子&#x2F;分母必须整体乘一个比例因子，这个用数学计算推一下很简单就能算出来<br>分子除以分母得到分配了注意力的一个token</p>
+<p>对每行进行相同操作得到最终结果</p>
+<h3 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h3><p>causal mask:在未来区&#x2F;不合法的地方当作-∞，得到的e^x即为0<br>反向传播：反向时局部分块重算P，算完就用掉</p>
+<h2 id="RAG和GraphRAG"><a href="#RAG和GraphRAG" class="headerlink" title="RAG和GraphRAG"></a>RAG和GraphRAG</h2><h3 id="RAG（Retrieval-Augmented-Generation，检索增强生成）"><a href="#RAG（Retrieval-Augmented-Generation，检索增强生成）" class="headerlink" title="RAG（Retrieval-Augmented Generation，检索增强生成）"></a>RAG（Retrieval-Augmented Generation，检索增强生成）</h3><p>在生成之前，从外部知识源检索信息，并把检索结果作为上下文交给模型生成</p>
+<p>比较擅长回答局部问题，但如果问比较全局的问题比如“这堆文档主要讨论了什么主题”，它通常会embedding检索几段相关chunk-&gt;拼到prompt-&gt;生成，导致漏掉多样性</p>
+<p>GraphRAG就是针对这种问题提出的</p>
+<h3 id="GraphRAG"><a href="#GraphRAG" class="headerlink" title="GraphRAG"></a>GraphRAG</h3><p>1.把文本变成一种可被结构化检索&#x2F;汇总的主题摘要+图结构：<br>GraphRAG用LLM从文档里抽取：实体(entity)和关系(relation)，形成一个实体-关系图<br>然后对图做社区划分(community detection)，把联系紧密的实体分成社区<br>接着为每个社区预生成community summary</p>
+<p>2.用“社区摘要”做Map-Reduce式回答（global全局搜索）：<br>Map:对于每个社区摘要，让LLM生成“针对该问题的部分回答”<br>Reduce：把所有部分回答汇总&#x2F;再总结成最终答案</p>
+<p>在GraphRAG的官方文档里还有局部搜索&#x2F;DRIFT搜索</p>
+<p>局部(local)搜索和RAG有点像，但GraphRAG还会扩展到其邻居和相关概念来对特定实体进行推理，适用于谁负责、发生了什么，这样的具体实体&#x2F;关系的事实与推理问题</p>
+<p>DRIFT搜索则是在局部搜索的基础上增加了社区上下文搜索，补充上下文理解&#x2F;用于解释等</p>
+<h3 id="注意点"><a href="#注意点" class="headerlink" title="注意点"></a>注意点</h3><p>值得注意的是，GraphRAG虽然是RAG的扩展版，但应根据应用场景不同选择使用对象，而不是单纯认为GraphRAG就比RAG好。</p>
+<p>GraphRAG离线构建成本高，图质量依赖于抽取准确率。在问简单事实问题时不如RAG</p>
+<p>RAG最爱用的Top-K 向量搜索是“相似度驱动”，GraphRAG 是“结构驱动”。前者回答“哪段话最像问题”，后者回答“哪些对象和关系与问题有关”</p>
+<h2 id="为什么现在-Decoder-only-成为大模型的主流架构"><a href="#为什么现在-Decoder-only-成为大模型的主流架构" class="headerlink" title="为什么现在 Decoder - only 成为大模型的主流架构"></a>为什么现在 Decoder - only 成为大模型的主流架构</h2>
                 
             </div>
             <hr/>
