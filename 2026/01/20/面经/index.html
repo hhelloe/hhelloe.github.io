@@ -454,11 +454,36 @@
 <h3 id="为什么“Decoder-only”成为了主流"><a href="#为什么“Decoder-only”成为了主流" class="headerlink" title="为什么“Decoder-only”成为了主流"></a>为什么“Decoder-only”成为了主流</h3><p>Encoder-Decoder最早解决的是：明确 输入-&gt;输出，这么一条路<br>后来发现Decoder-only把输入也当成要生成的一部分即可，于是prompt token和answer token就统一成了一条序列，满足自回归的生成方式<br>介于decoder什么都能统一成next-token prediction的特性，其泛用面广，可以将多种任务统一成一种格式，如翻译、问答、对话 等。虽然encoder-decoder也能做，但天然具有局限性。<br>世界上最多的数据不是QA对也不是翻译对，而是连续文本，decoder-only的预训练不需要任何标注就能做到，并且自回归和kv cache十分契合。</p>
 <p>所以decoder-only赢的不是结构，而是范式，不过它只是通用大模型的目前最优解。在翻译、检索、表示学习等领域另外两种架构依然健在。</p>
 <p>trade-off:Decoder-only 在条件生成和对齐复杂输入时，结构表达不如 Encoder–Decoder 直接，但工程统一性更重要</p>
-<h2 id="了解过哪些模型训练优化的方法"><a href="#了解过哪些模型训练优化的方法" class="headerlink" title="了解过哪些模型训练优化的方法"></a>了解过哪些模型训练优化的方法</h2><h3 id="并行与切分"><a href="#并行与切分" class="headerlink" title="并行与切分"></a>并行与切分</h3><p>数据并行（DP）：最基础，多卡分batch，同步梯度<br>张量并行（TP）：把矩阵乘按维度切到多卡（如QKV，FFN的线性层分片）<br>流水线并行（PP）：按层切，像装配线一样跑micro-batch<br>ZeRO：把optimizer state&#x2F;gradients&#x2F;parameters分片，显存降很多<br>3D并行:DP+TP+PP组合，大模型训练标配思路</p>
+<h2 id="了解过哪些模型训练优化的方法"><a href="#了解过哪些模型训练优化的方法" class="headerlink" title="了解过哪些模型训练优化的方法"></a>了解过哪些模型训练优化的方法</h2><p>模型训练优化本质是在算力、显存、通信开销和数值稳定性之间做取舍，不同的并行和显存优化策略，实际上是在这四个维度上移动瓶颈</p>
+<h3 id="并行与切分"><a href="#并行与切分" class="headerlink" title="并行与切分"></a>并行与切分</h3><p>数据并行（DP）：最基础，多卡分batch，同步梯度<br>张量并行（TP）：把矩阵乘按维度切到多卡（如QKV，FFN的线性层分片）<br>流水线并行（PP）：按层切，像装配线一样跑micro-batch<br>ZeRO：把optimizer state&#x2F;gradients&#x2F;parameters分片，显存降很多<br>3D并行:DP+TP+PP组合，大模型训练标配思路</p>
 <h3 id="训练时在省什么内存"><a href="#训练时在省什么内存" class="headerlink" title="训练时在省什么内存"></a>训练时在省什么内存</h3><p>Parameter（参数），模型权重W<br>Gradient（梯度），▽W<br>Optimizer states（优化器状态），比如Adam的一阶&#x2F;二阶矩m，v<br>Activations（激活&#x2F;中间结果）：前向为了反向要保存的中间张量</p>
 <p>不同并行策略主要在这四类上做取舍</p>
-<h3 id="显存优化：主要对付激活和optimizer-states"><a href="#显存优化：主要对付激活和optimizer-states" class="headerlink" title="显存优化：主要对付激活和optimizer states"></a>显存优化：主要对付激活和optimizer states</h3><p>Activation checkpointing：不存中间激活，反向时重算，省显存换算力（看到这里的时候在想，我去，这不就是flash-attn的做法么，实际上不然，flash-attn是只保留少量统计量在需要时局部算P；这里这个方法是保存一个检查点，反向需要的时候从检查点开始前向重新算一遍）<br>Offload：把optimizer state或参数挪到CPU&#x2F;SSD，吞吐会受影响但能训更大的模型</p>
-<h2 id="了解过哪些模型推理优化的方法"><a href="#了解过哪些模型推理优化的方法" class="headerlink" title="了解过哪些模型推理优化的方法"></a>了解过哪些模型推理优化的方法</h2>
+<h3 id="显存优化：主要对付激活和optimizer-states"><a href="#显存优化：主要对付激活和optimizer-states" class="headerlink" title="显存优化：主要对付激活和optimizer states"></a>显存优化：主要对付激活和optimizer states</h3><p>Activation checkpointing：不存中间激活，反向时重算，省显存换算力（看到这里的时候在想，我去，这不就是flash-attn的做法么，实际上不然，flash-attn是只保留少量统计量在需要时局部算P；这里这个方法是保存一个检查点，反向需要的时候从检查点开始前向重新算一遍，是用计算换显存）<br>Offload：把optimizer state或参数挪到CPU&#x2F;SSD，吞吐会受影响但能训更大的模型<br>序列并行（sequence parallel）：在TP下一步把B×S×H的激活沿着序列维S分片到不同GPU，从而降低activation memory峰值，常见于Megatron-LM</p>
+<h3 id="算子-数值：提升吞吐"><a href="#算子-数值：提升吞吐" class="headerlink" title="算子&#x2F;数值：提升吞吐"></a>算子&#x2F;数值：提升吞吐</h3><p>混合精度训练</p>
+<p>梯度累积：把大batch拆成k个micro-batch，先不更新参数，梯度先加起来，累积k次做一次更新</p>
+<p>梯度裁剪：梯度太大时把它按比例缩小</p>
+<p>loss scaling：FP16 会出现问题：梯度太小会下溢变成 0<br>做法：先把 loss 乘一个大系数 S，让梯度也按比例变大；反向完再把梯度除回去</p>
+<p>fused kernels：把多个小算子合成为一次大操作</p>
+<h3 id="Attention的训练优化"><a href="#Attention的训练优化" class="headerlink" title="Attention的训练优化"></a>Attention的训练优化</h3><p>FlashAttention&#x2F;memory-efficient attention<br>长上下文训练技巧：RoPE scaling、位置插值、chunked attention等</p>
+<h2 id="了解过哪些模型推理优化的方法"><a href="#了解过哪些模型推理优化的方法" class="headerlink" title="了解过哪些模型推理优化的方法"></a>了解过哪些模型推理优化的方法</h2><h3 id="瓶颈"><a href="#瓶颈" class="headerlink" title="瓶颈"></a>瓶颈</h3><p>算力、显存、显存带宽、调度效率</p>
+<h3 id="量化"><a href="#量化" class="headerlink" title="量化"></a>量化</h3><p>weight-only量化：最稳，改动小，省显存，提cache命中率<br>weight+activation量化：更省但更容易数值不稳<br>KV cache量化：对长上下文关键</p>
+<h3 id="结构层面优化"><a href="#结构层面优化" class="headerlink" title="结构层面优化"></a>结构层面优化</h3><p>MQA(Multi-QueryAttention):每个head的Query共享K和V矩阵，k v只有一头<br>GQA(Grouped-QueryAttention):每个head的Query共享K和V矩阵中的n头，k v有若干头（&lt; head头）<br>蒸馏：大模型教小模型，少层少参数<br>MoE：每token只激活部分专家（算量低但系统复杂）<br>剪枝&#x2F;稀疏化</p>
+<h3 id="算子级加速"><a href="#算子级加速" class="headerlink" title="算子级加速"></a>算子级加速</h3><p>FlashAttn</p>
+<h3 id="参考标准"><a href="#参考标准" class="headerlink" title="参考标准"></a>参考标准</h3><p>第一类是 减少重复计算：自回归生成基本都会用 KV cache，避免每个 token 反复算历史注意力；在服务端会进一步做 prefix cache &#x2F; KV 复用，对重复前缀的请求能明显降 TTFT 和成本。<br>第二类是 提升 GPU 利用率和显存效率：比如 continuous batching 把不同长度请求持续拼 batch；配合 paged KV &#x2F; PagedAttention 这类分页管理 KV cache，减少显存碎片、提高吞吐，长上下文并发更稳。<br>第三类是 算子级加速：注意力通常是瓶颈，会用 FlashAttention 这种 memory-efficient attention 来降低显存读写、提升速度；线性层会靠更好的 GEMM&#x2F;kernels 和算子融合。<br>第四类是 降低精度&#x2F;压缩：比如 INT8&#x2F;INT4 量化（权重量化、甚至 KV cache 量化）来降显存和带宽，从而提升并发、降低成本，同时要关注精度回归。<br>另外还有 speculative decoding 这种解码加速：用小模型先草拟 token，大模型验证，能减少大模型前向次数，在输出较长时收益明显。<br>实际落地我会看目标：如果追吞吐就是 batching+paged KV+flash attention；如果追首 token 延迟就优先 prefix cache、减少 prefill 成本；如果显存紧就量化和 GQA&#x2F;MQA 这类减少 KV 占用的结构。”</p>
+<h2 id="如果要提升大模型的多轮对话能力，你有哪些可以改进的点"><a href="#如果要提升大模型的多轮对话能力，你有哪些可以改进的点" class="headerlink" title="如果要提升大模型的多轮对话能力，你有哪些可以改进的点"></a>如果要提升大模型的多轮对话能力，你有哪些可以改进的点</h2><h3 id="主线"><a href="#主线" class="headerlink" title="主线"></a>主线</h3><p>让模型在长对话里持续保持目标、记住关键事实、少跑题、少出幻觉、能纠错</p>
+<h3 id="数据层面-1"><a href="#数据层面-1" class="headerlink" title="数据层面"></a>数据层面</h3><p>数据里加目标&#x2F;偏好&#x2F;已知事实&#x2F;待确认点等结构化字段，添加负样本和对比数据、让模型对比学习，构造需要引用第N轮信息才能答对的样本，避免模型指挥就近记忆</p>
+<h3 id="训练目标是让模型学会对话管理而不是只答题"><a href="#训练目标是让模型学会对话管理而不是只答题" class="headerlink" title="训练目标是让模型学会对话管理而不是只答题"></a>训练目标是让模型学会对话管理而不是只答题</h3><p>多任务训练，不知训练next-token，还有关键信息抽取、对话状态跟你更新、引用对话证据<br>偏好对齐（DPO&#x2F;RLHF类）<br>自我纠错训练，让模型学会道歉、回滚，修正并解释原因。如果直接用‘用户说你错了 → 道歉并改答案’的数据做训练，会明显放大幻觉。实际需要把纠错拆成两步：先验证是否真的错了，再决定是修正、澄清还是坚持原结论，而且修正必须绑定明确证据，否则只是两次自由生成</p>
+<h3 id="记忆机制"><a href="#记忆机制" class="headerlink" title="记忆机制"></a>记忆机制</h3><p>短期工作记忆：对最近几轮做结构化摘要，每轮更新一次，作为系统级隐藏上下文<br>长期记忆：偏好&#x2F;背景等存成可检索条目，每次对话先检索再注入<br>记忆写入策略：稳定性高+未来复用价值高+用户明确期望<br>冲突处理：新信息与旧记忆冲突，优先触发澄清而非覆盖</p>
+<p>实际系统中，过度写入长期记忆会放大早期错误，导致模型在后续对话中持续基于错误前提推理，因此记忆管理比记忆容量更重要</p>
+<h3 id="上下文管理"><a href="#上下文管理" class="headerlink" title="上下文管理"></a>上下文管理</h3><p>分层上下文：系统&#x2F;策略；结构化摘要；近邻原文对话<br>引用式回答<br>话题切换检测</p>
+<h3 id="工具检索"><a href="#工具检索" class="headerlink" title="工具检索"></a>工具检索</h3><p>RAG针对多轮等</p>
+<h2 id="为什么有了-SFT-之后还需要-RLHF"><a href="#为什么有了-SFT-之后还需要-RLHF" class="headerlink" title="为什么有了 SFT 之后还需要 RLHF"></a>为什么有了 SFT 之后还需要 RLHF</h2><h3 id="SFT（Supervised-Fine-Tuning，监督微调）"><a href="#SFT（Supervised-Fine-Tuning，监督微调）" class="headerlink" title="SFT（Supervised Fine-Tuning，监督微调）"></a>SFT（Supervised Fine-Tuning，监督微调）</h3><p>给定输入和输出，模型来学习从输入到输出的这种映射关系。在SFT中，做的是next token prediction，目标是最大化下一个token的准确率</p>
+<h3 id="RLHF（Reinforcement-Learning-from-Human-Feedback）"><a href="#RLHF（Reinforcement-Learning-from-Human-Feedback）" class="headerlink" title="RLHF（Reinforcement Learning from Human Feedback）"></a>RLHF（Reinforcement Learning from Human Feedback）</h3><p>会先训练一个reward model，让reward model去学习什么要的回复是更符合人类偏好，再让这个reward model去指导大模型进行学习，从而引导大模型输出更符合人类标注的回复</p>
+<h3 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h3><p>SFT的目标是模仿，更倾向于复刻数据分布，会被示范数据限制：数据中可能会有隐性坏习惯，比如过于啰嗦、迎合用户等；也可能不同标注者风格不同导致示例数据不一致<br>RLHF的目标是偏好优化，会把这种偏好变成一个可优化的奖励，RLHF可以用偏好比较把坏行为&#x2F;风格压下去<br>很多关键质量维度并不是 对&#x2F;错 二分类，而是需要：更礼貌、更简洁、更遵循指令等。这些很难用一条标准答案概括</p>
+<p>在事实不确定时，SFT往往倾向于给出一个看起来像答案的答案。人类更加偏好不确定就说明不确定、或给出可验证步骤，这种保守且尽量没有幻觉的偏好，用RLHF正好</p>
+<p>SFT可以打底学习指令跟随和基本对话能力，RLHF对齐偏好、安全、语气等，是不同的分工</p>
+<p>即使 SFT 数据足够干净，SFT 仍然只能拟合条件分布 P(y∣x)，而无法显式表达在多个可行解中更偏好哪一个，这也是偏好学习RLHF不可替代的原因。</p>
+
                 
             </div>
             <hr/>
