@@ -405,10 +405,10 @@
 <p>文本-&gt;张量-&gt;loss-&gt;梯度-&gt;参数更新-&gt;checkpoint-&gt;可部署模型</p>
 <p>一开始我们有文本&#x2F;样本，此时他们：<br>如果要做预训练，为一段段文本doc<br>如果做SFT，为prompt + answer<br>这时候他们都还是字符串</p>
 <p>文本在开始训练前，需要进行清洗和格式化：<br>去重、统一编码、过滤低质内容之类的<br>如果是对SFT，则还要加上提示&#x2F;标签、分隔符等</p>
-<p>之后经过tokenizer字符串会变成整数序列token ids，序列中每个整数之后都会查表替换为一个token向量</p>
+<p>之后经过tokenizer字符串会变成整数序列token ids。序列中每个整数之后都会查表替换为一个token向量（下下一步）</p>
 <p>多条样本会被打包成batch，进行:<br>padding、attention_mask等操作</p>
 <p>之后则是跑前向计算，token ids被embedding为token向量，再被计算为logits（下一个token的打分）:<br>input_ids[B,T]-&gt;hidden[B,T,D]<br>-&gt;多层transformer block -&gt;输出层-&gt;logits[B,T,V]     (V&#x3D;词表大小)</p>
-<p>得到logits了就可以计算loss:logits + labels -&gt; scalar loss<br>用交叉熵(cross entropy):<br>对每个位置t，用logits[:,t,:]预测label[:,t]<br>mask掉padding<br>平均得到一个标量loss</p>
+<p>得到logits了就可以计算loss:logits + labels -&gt; scalar loss<br>用交叉熵(cross entropy):<br>对每个位置t，用logits[:,t,:]预测label[:,t]<br>mask掉padding，mask prompt（SFT）<br>平均得到一个标量loss</p>
 <p>有了loss之后开始反向传播，毕竟loss就是反应模型训练程度的参数<br>loss.backward()后：每个可训练参数都有梯度grad<br>输出：参数梯度</p>
 <p>接着用参数梯度更新参数：optimizer step<br>常见AdamW优化器做：动量&#x2F;二阶矩更新、weight decay、更新参数<br>训练技巧也往往在这里出现：如梯度裁剪、学习率调度、梯度累积等</p>
 <p>这样就训练了一步了，之后循环执行取 batch → 前向 → loss → 反向 → 更新<br>并监控：loss、困惑度perplexity、稳定性等</p>
@@ -416,6 +416,23 @@
 <p>导出可用模型：训练态-&gt;部署态<br>训练结束后，你通常做这些事情让它“可上线”：<br>只保留模型权重（不带 optimizer states）<br>如果是LoRA&#x2F;Adapter：选择<br>合并（merge）到权重，或保留为可切换模块<br>（可选）量化（INT8&#x2F;INT4）<br>（可选）转换推理引擎格式（TensorRT-LLM &#x2F; vLLM 等）<br>配置 tokenizer、特殊 token、对话模板<br>输出：一个可推理的模型包（权重 + tokenizer + 配置）</p>
 <p>最后推理沿着与上线</p>
 <h3 id="好，以上就是一个示例的完整训练流程了"><a href="#好，以上就是一个示例的完整训练流程了" class="headerlink" title="好，以上就是一个示例的完整训练流程了"></a>好，以上就是一个示例的完整训练流程了</h3><p>接下来让我们看看有哪些训练优化技术可以用在里面</p>
+<p>首先最开始我们可以选择自己要用什么精度训练，可以用fp32也可以用fp16&#x2F;fp32混合精度</p>
+<p>前向时候的优化技巧：<br>gradient checkpointing：前向仍然要算所有层的激活，但只保存少数“检查点”激活（比如每 N 层的输入&#x2F;输出），中间层激活丢掉<br>算子融合：把多个本来要分开执行的小算子，合并成一个（或更少的）GPU kernel。还会用于在Attn&#x2F;LayerNorm&#x2F;RmsNorm&#x2F;MLP&#x2F;FFN&#x2F;一串小算子</p>
+<p>并行技巧：<br>DP：扩Batch，数据并行。同步梯度<br>TP：把一个大矩阵乘拆到多卡（模型太大装不下的时候用）。同步激活&#x2F;中间结果（更频繁的通信）<br>PP：把层切成好几段，像流水线一样跑<br>ZeRO：把optimizer state、梯度、参数切分到多卡，省显存、训大模型，需要时聚合</p>
+<p>优化器与训练技巧：<br>AdamW、学习率调度、梯度裁剪、数据质量&#x2F;配比</p>
+<p>参数高效微调：<br>Lora<br>Adapters：层间插小模块，只训小模块。<br>Prefix&#x2F;Prompt tuning<br>QLoRA：权重 4bit 量化存着，训练 LoRA</p>
+<h3 id="训练章节我们按步骤梳理一下，防止混乱"><a href="#训练章节我们按步骤梳理一下，防止混乱" class="headerlink" title="训练章节我们按步骤梳理一下，防止混乱"></a>训练章节我们按步骤梳理一下，防止混乱</h3><p>文本-&gt;混合精度&#x2F;数据配比<br>-&gt;token-&gt;batch维度DP<br>-&gt;前向-&gt;gradient checkpoint&#x2F;算子融合&#x2F;TP&#x2F;PP&#x2F;ZeRO<br>-&gt;反向-&gt;算子融合&#x2F;AdamW&#x2F;学习率调度&#x2F;梯度裁剪&#x2F;ZeRO<br>-&gt;ckpt-&gt;<br>-&gt;模型      Lora&#x2F;Adapters&#x2F;QLora&#x2F;Adapters&#x2F;Prompt tuning</p>
+<h3 id="训练部分依然还有一些相对零散的方法"><a href="#训练部分依然还有一些相对零散的方法" class="headerlink" title="训练部分依然还有一些相对零散的方法"></a>训练部分依然还有一些相对零散的方法</h3><p>结构层面：<br>参数共享（如 Transformer 中的某些变体）<br>低秩分解（LoRA、Adapters）<br>剪枝（Pruning）<br>知识蒸馏（Teacher → Student）</p>
+<h3 id="大概结论"><a href="#大概结论" class="headerlink" title="大概结论"></a>大概结论</h3><p>不收敛 → 看学习率和优化器<br>过拟合 → 看正则和数据<br>太慢 → 看工程和精度<br>泛化差 → 看数据分布和训练策略</p>
+<h2 id="推理"><a href="#推理" class="headerlink" title="推理"></a>推理</h2><p>模型：量化 &#x2F; 蒸馏<br>输入和预处理</p>
+<p>prefill阶段：FlashAttention &#x2F; prefix cache &#x2F; 编译</p>
+<p>decode阶段：KV cache 管理（paged&#x2F;sliding&#x2F;quantize）&#x2F; 连续批处理 &#x2F; speculative decoding</p>
+<p>输出与停止条件</p>
+<p>服务：动态批处理、多卡并行、内存管理</p>
+<h3 id="经验结论"><a href="#经验结论" class="headerlink" title="经验结论"></a>经验结论</h3><p>OOM（显存爆）→ 先看 KV cache（上下文长度、并发、层数、dtype），再看权重量化</p>
+<p>延迟高 → 看 decode 是否被带宽卡住（attention&#x2F;KV 读），以及是否能用 speculative &#x2F; 编译 &#x2F; fused kernels</p>
+<p>吞吐低 → 看 batching（dynamic&#x2F;continuous）、KV cache 管理（paged）、并发策略</p>
+<p>长上下文慢 → 基本就是 KV cache + attention 的代价，考虑 sliding window &#x2F; chunking &#x2F; 检索增强减少上下文</p>
 
                 
             </div>
