@@ -483,6 +483,22 @@
 <p>在事实不确定时，SFT往往倾向于给出一个看起来像答案的答案。人类更加偏好不确定就说明不确定、或给出可验证步骤，这种保守且尽量没有幻觉的偏好，用RLHF正好</p>
 <p>SFT可以打底学习指令跟随和基本对话能力，RLHF对齐偏好、安全、语气等，是不同的分工</p>
 <p>即使 SFT 数据足够干净，SFT 仍然只能拟合条件分布 P(y∣x)，而无法显式表达在多个可行解中更偏好哪一个，这也是偏好学习RLHF不可替代的原因。</p>
+<h2 id="PPO-和-DPO-的主要思想是什么"><a href="#PPO-和-DPO-的主要思想是什么" class="headerlink" title="PPO 和 DPO 的主要思想是什么"></a>PPO 和 DPO 的主要思想是什么</h2><h3 id="PPO-Proximal-Policy-Optimization"><a href="#PPO-Proximal-Policy-Optimization" class="headerlink" title="PPO(Proximal Policy Optimization)"></a>PPO(Proximal Policy Optimization)</h3><p>用人类偏好训练出一个reward model(RM)<br>用PPO在RM给的reward下，把大模型当作策略优化</p>
+<p>PPO关键思想是：限制每次更新，别离策略太远<br>首先PPO不允许新策略在某个token上的概率涨&#x2F;跌太多，用一个clip区间超出就不给更多奖励</p>
+<p>在RLHF中，Reward通常会&#x3D; RMscore-βKL（πθ​∥πref） 防止语言能力塌陷的生命线<br>πθ：当前正在被训练、会不断变化的模型策略（new &#x2F; updated policy）<br>πref：一个固定的参考策略（reference policy），通常是 SFT 后冻结的大模型</p>
+<p>PPO 通过裁剪更新幅度和 KL 正则，在保证训练稳定的前提下，用强化学习最大化人类偏好奖励</p>
+<h3 id="DPO（Direct-Preference-Optimization）"><a href="#DPO（Direct-Preference-Optimization）" class="headerlink" title="DPO（Direct Preference Optimization）"></a>DPO（Direct Preference Optimization）</h3><p>DPO把人类偏好建模为：在同一个prompt偏好下，人类更偏好回答A，而不是B，然后直接优化在当前prompt前提下提高A的概率，降低B的概率<br>通过直接优化偏好对的概率差，在无需显式强化学习的情况下完成偏好对齐，本质上是把 PPO 的最优解转成一个对比式的监督目标，工程更简单、训练更稳定</p>
+<h2 id="大模型的灾难性遗忘问题怎么解决"><a href="#大模型的灾难性遗忘问题怎么解决" class="headerlink" title="大模型的灾难性遗忘问题怎么解决"></a>大模型的灾难性遗忘问题怎么解决</h2><h3 id="保留关键参数"><a href="#保留关键参数" class="headerlink" title="保留关键参数"></a>保留关键参数</h3><p>代表思路EWC、SI、MAS<br>只适合小模型&#x2F;少任务，因为重要性估计不稳定，并且任务多了之后所有参数都很重要</p>
+<h3 id="复习"><a href="#复习" class="headerlink" title="复习"></a>复习</h3><p>保存旧任务样本，训练时和新任务样本混着来<br>用模型自己生成旧任务数据进行训练，但这样噪音会被放大，轮数过多记忆会变形</p>
+<h3 id="结构隔离"><a href="#结构隔离" class="headerlink" title="结构隔离"></a>结构隔离</h3><p>lora&#x2F;MoE&#x2F;Adapter&#x2F;Progressive Networks<br>代价：参数量膨胀&#x2F;推理复杂度上升</p>
+<h3 id="idea"><a href="#idea" class="headerlink" title="idea"></a>idea</h3><p>有限容量系统在没有外部记忆的情况下同时保持所有过去最优解是不可能的，值得思考的是，什么应该被忘掉和什么值得被记住</p>
+<h2 id="了解-KV-cache-吗，-GQA-的思想是什么"><a href="#了解-KV-cache-吗，-GQA-的思想是什么" class="headerlink" title="了解 KV cache 吗， GQA 的思想是什么"></a>了解 KV cache 吗， GQA 的思想是什么</h2><h3 id="KV-cache"><a href="#KV-cache" class="headerlink" title="KV cache"></a>KV cache</h3><p>把“历史 token 的 K&#x2F;V”当作推理的外部记忆，避免重复计算</p>
+<h3 id="GQA（Grouped-Query-Attention）"><a href="#GQA（Grouped-Query-Attention）" class="headerlink" title="GQA（Grouped-Query Attention）"></a>GQA（Grouped-Query Attention）</h3><p>之前在上面提到过，就是MQA和MHA的折中方案，比MHA占用显存少，比MQA精度高，原理是让多个 Q heads 共享更少套 K&#x2F;V</p>
+<h2 id="transformer和llama的LN有什么区别，手写RMSNorm"><a href="#transformer和llama的LN有什么区别，手写RMSNorm" class="headerlink" title="transformer和llama的LN有什么区别，手写RMSNorm"></a>transformer和llama的LN有什么区别，手写RMSNorm</h2><h3 id="transformer的是LayNorm"><a href="#transformer的是LayNorm" class="headerlink" title="transformer的是LayNorm"></a>transformer的是LayNorm</h3><p>对每个 token 的隐藏向量做<br>减均值 + 除标准差，然后再做可学习的缩放&#x2F;平移</p>
+<h3 id="llama的LN实际上是RMSNorm"><a href="#llama的LN实际上是RMSNorm" class="headerlink" title="llama的LN实际上是RMSNorm"></a>llama的LN实际上是RMSNorm</h3><p>不减均值，只用均方根做尺度归一化，通常没有 β</p>
+<h3 id="对比"><a href="#对比" class="headerlink" title="对比"></a>对比</h3><p>LayerNorm：稳、全能、代价稍高<br>RMSNorm：简、快、在现代 Transformer 里“刚好够用”<br>LLaMA 的选择不是因为 LN 不好，而是因为它“用不着那么多”</p>
+<h2 id="FFN有什么不同，写Relu和SwiGLU"><a href="#FFN有什么不同，写Relu和SwiGLU" class="headerlink" title="FFN有什么不同，写Relu和SwiGLU"></a>FFN有什么不同，写Relu和SwiGLU</h2><p>在 Transformer 里，FFN（Feed-Forward Network）是逐 token 的 MLP，不做 token 间交互，只在 hidden 维度上“拉伸 → 非线性 → 压回”。</p>
+<h3 id="ReLU-FFN"><a href="#ReLU-FFN" class="headerlink" title="ReLU FFN"></a>ReLU FFN</h3><h3 id="SwiGLU，LLaMA的核心FFN"><a href="#SwiGLU，LLaMA的核心FFN" class="headerlink" title="SwiGLU，LLaMA的核心FFN"></a>SwiGLU，LLaMA的核心FFN</h3><p>a &#x3D; w1(x)              # 内容<br>g &#x3D; F.silu(w2(x))      # 门<br>out &#x3D; w3(a * g)        # 门控后投影回 dim<br>表达力主要来自：门随输入变化，让同一个 FFN 在不同 token 上表现得像“不同的函数”。</p>
 
                 
             </div>
