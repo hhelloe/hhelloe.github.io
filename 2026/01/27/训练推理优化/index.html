@@ -4,10 +4,12 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="大模型基础知识, blog of hhelloe">
-    <meta name="description" content="补短
-对于模型训练过程中，如果出现样本标签数据分布极其不均衡，通常会采取什么方法来解决问题问题本质loss会被多数类主导，会使得模型只要学会猜多数类就能得高分所以核心目的是：让模型在训练时多关心少数类
-解决方式数据层面1.过采样（overs">
+    <meta name="keywords" content="训练/推理 优化, blog of hhelloe">
+    <meta name="description" content="因为大模型只是比较杂比较乱
+我又不太擅长零散的记忆
+所以把训练和推理的一些知识以一种顺序让自己能串联起来
+训练首先训练模型的步骤我们走一个完整流程
+文本-&amp;gt;张量-&amp;gt;loss-&amp;gt;梯度-&amp;gt;参数更新-&amp;gt;checkpo">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -19,7 +21,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>大模型基础知识 | blog of hhelloe</title>
+    <title>训练/推理 优化 | blog of hhelloe</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -334,12 +336,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/16.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/23.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">大模型基础知识</h1>
+                    <h1 class="description center-align post-title">训练/推理 优化</h1>
                 </div>
             </div>
         </div>
@@ -375,7 +377,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2026-01-20
+                    2026-01-27
                 </div>
                 
 
@@ -396,109 +398,24 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>补短</p>
-<h2 id="对于模型训练过程中，如果出现样本标签数据分布极其不均衡，通常会采取什么方法来解决问题"><a href="#对于模型训练过程中，如果出现样本标签数据分布极其不均衡，通常会采取什么方法来解决问题" class="headerlink" title="对于模型训练过程中，如果出现样本标签数据分布极其不均衡，通常会采取什么方法来解决问题"></a>对于模型训练过程中，如果出现样本标签数据分布极其不均衡，通常会采取什么方法来解决问题</h2><h3 id="问题本质"><a href="#问题本质" class="headerlink" title="问题本质"></a>问题本质</h3><p>loss会被多数类主导，会使得模型只要学会猜多数类就能得高分<br>所以核心目的是：让模型在训练时多关心少数类</p>
-<h3 id="解决方式"><a href="#解决方式" class="headerlink" title="解决方式"></a>解决方式</h3><h4 id="数据层面"><a href="#数据层面" class="headerlink" title="数据层面"></a>数据层面</h4><p>1.过采样（oversampling）<br>重复采样少数类样本或用数据增强制造新样本</p>
-<p>缺点：重复样本容易导致过拟合，增强不合理会引入噪声</p>
-<p>2.欠采样（Undersampling）<br>随机丢弃多数类样本<br>只适用于数据量极大时</p>
-<p>3.合成样本(例如SMOTE算法，即Synthetic Minority Oversampling Technique合成少数过采样算法)<br>在特征空间用特殊算法合成少数类样本</p>
-<p>比直接复制好，对比之下也能缓解过拟合，但仍然有过拟合的可能<br>如果少数类样本和多数类样本在特征空间中存在大量重叠,SMOTE合成的新样本可能会落入多数类样本呢区域，反而加剧了样本的混淆</p>
-<h4 id="损失函数层面"><a href="#损失函数层面" class="headerlink" title="损失函数层面"></a>损失函数层面</h4><p>1.类别加权（Class weighting）<br>在loss里给少数类更大的权重</p>
-<p>例如L&#x3D;-w_y log{p(y)}<br>让w_y和1&#x2F;freq(y)成比例</p>
-<p>常用，但权重过大容易造成训练不稳定，需要调参</p>
-<p>2.Focal loss<br>L &#x3D; -(1-p_y)^γ log{p(y)}<br>难样本权重大，易样本自动降权<br>但会多一个超参并且对概率校准有影响</p>
-<h4 id="采样策略层面"><a href="#采样策略层面" class="headerlink" title="采样策略层面"></a>采样策略层面</h4><p>1.Balanced mini-batch<br>每个batch强制类别均衡</p>
-<p>2.两阶段训练 （coarse-&gt;fine）<br>stage 1：均衡采样，学区分能力<br>stage 2：按真实分布微调</p>
-<p>高风险任务常见，但训练流程与调参复杂度较高</p>
-<h2 id="self-attention"><a href="#self-attention" class="headerlink" title="self-attention"></a>self-attention</h2><p>假设我有一串tokens<br>X &#x3D; [x1,x2,x3,x4,…,xN]<br>每个xi代表模型当前层的token表示，包含内容信息和位置编码</p>
-<p>X通过对应的投影矩阵，即W_Q,W_K,W_V相乘得到三种线性变换视角Q、K、V<br>Q(Query，查询),站在当前token的视角，表示“我关心什么样的信息”<br>K(Key),站在被查询token的视角，表示“我具备什么样的特征”<br>V(Value),真正被聚合&#x2F;加权的信息，表示“如果你选我，我给你什么”</p>
-<p>例如(QK^T)_{ij} &#x3D; (q_i)^T k_j含义为：<br>token i问：token j和我关心的东西有多相关？</p>
-<p>之后对这样的权重按行用softmax后与V矩阵相乘给每个token生成一个新的表示向量（分配注意力）</p>
-<h2 id="transformer的感受野encoder中是可以看到所有的token的，你认为感受野越大越好还是越小越好"><a href="#transformer的感受野encoder中是可以看到所有的token的，你认为感受野越大越好还是越小越好" class="headerlink" title="transformer的感受野encoder中是可以看到所有的token的，你认为感受野越大越好还是越小越好"></a>transformer的感受野encoder中是可以看到所有的token的，你认为感受野越大越好还是越小越好</h2><h3 id="感受野太大的问题"><a href="#感受野太大的问题" class="headerlink" title="感受野太大的问题"></a>感受野太大的问题</h3><p>1.self-attn本质是加权平均，在噪声很大的早期（高时间步）就用的话会导致细节被大量无关token稀释，模型会更倾向于整体统计而不是局部几何<br>2.token多-&gt;attention成本爆炸<br>可能会：被迫用更大patch，减少层数<br>3.噪声环境下，全局attention会把噪声彼此传播</p>
-<h3 id="感受野太小的问题"><a href="#感受野太小的问题" class="headerlink" title="感受野太小的问题"></a>感受野太小的问题</h3><p>1.学不到全局一致性，例如人脸五官不错但比例和位置怪<br>2.类别、关系、结构一致性等高层语义需要全局属性</p>
-<h3 id="解决措施"><a href="#解决措施" class="headerlink" title="解决措施"></a>解决措施</h3><p>分层、分尺度、分阶段<br>1.底层小，高层大<br>2.高分辨率局部，低分辨率全局<br>3.diffusion不同时间步不同感受野</p>
-<h2 id="位置编码-sin-cos，正余弦，bert可学习位置编码，rope相比于正余弦编码的优势"><a href="#位置编码-sin-cos，正余弦，bert可学习位置编码，rope相比于正余弦编码的优势" class="headerlink" title="位置编码:sin cos，正余弦，bert可学习位置编码，rope相比于正余弦编码的优势"></a>位置编码:sin cos，正余弦，bert可学习位置编码，rope相比于正余弦编码的优势</h2><h3 id="正余弦位置编码"><a href="#正余弦位置编码" class="headerlink" title="正余弦位置编码"></a>正余弦位置编码</h3><p>为每个token的每个维度按公式计算一个cos&#x2F;sin值，每个token都能得到一个和维度数量相同的向量来表达位置。本质是绝对位置，每个token都带着自己是第几位的标签，不能显式表示token之间的相对位置关系，需要模型从绝对位置向量间接学习。<br>我认为这种绝对位置编码对超出训练长度的长上下文泛化往往不稳定，上下文超过训练长度会出问题，绝对位置表示可能很难让模型理解超出训练长度的位置</p>
-<h3 id="bert的可学习位置编码"><a href="#bert的可学习位置编码" class="headerlink" title="bert的可学习位置编码"></a>bert的可学习位置编码</h3><p>同样是绝对位置，不过会为每一个位置pos直接学一个向量，这个向量在模型里会学习会更新</p>
-<h3 id="RoPE-Rotary-Positional-Embedding-旋转位置编码"><a href="#RoPE-Rotary-Positional-Embedding-旋转位置编码" class="headerlink" title="RoPE(Rotary Positional Embedding,旋转位置编码)"></a>RoPE(Rotary Positional Embedding,旋转位置编码)</h3><p>RoPE把位置变成一种几何变换：位置越靠后，向量在某些二维子空间里旋转得越多<br>对Q和K做“按位置旋转”，让注意力的点积天然带上相对位置信息</p>
-<p>优势：<br>1.相对位置信息天然进入注意力，结果会依赖相对距离i-j，模型会更容易学到近的&#x2F;远的相关、周期性结构等相对模式<br>2.长上下文泛化通常更强，因为用的相对关系，比绝对位置的可迁移性强很多<br>3.不需要额外的可学习参数<br>4.相加式位置会改变每个token的表示本身，RoPE 通过对 Q&#x2F;K 做旋转来影响相似度计算，而不改变 token 的模长，更贴合 attention 基于几何相似度的本质</p>
-<h3 id="补充-相对位置编码ALiBi"><a href="#补充-相对位置编码ALiBi" class="headerlink" title="补充 相对位置编码ALiBi"></a>补充 相对位置编码ALiBi</h3><p>对logits做距离越大就衰减越多的bias，softmax 之后，这个线性惩罚会变成 指数级的衰减</p>
-<h2 id="欠拟合和过拟合定义，通常如何解决"><a href="#欠拟合和过拟合定义，通常如何解决" class="headerlink" title="欠拟合和过拟合定义，通常如何解决?"></a>欠拟合和过拟合定义，通常如何解决?</h2><h3 id="欠拟合"><a href="#欠拟合" class="headerlink" title="欠拟合"></a>欠拟合</h3><p>模型无法充分学习训练数据中的模式，本身能力不足</p>
-<p>核心思路：增强模型的学习能力</p>
-<p>增大模型容量（更深&#x2F;更宽）<br>使用更强的特征表示（更好的 embedding、引入 attention）<br>训练更久（增加 epoch）<br>减弱正则化（降低 dropout、weight decay）<br>调大学习率（在合理范围内）</p>
-<h3 id="过拟合"><a href="#过拟合" class="headerlink" title="过拟合"></a>过拟合</h3><p>模型过度拟合训练数据，学习了噪声和偶然性，泛化能力差</p>
-<p>核心思路：限制模型记忆噪声，提升泛化<br>增加数据量或做数据增强</p>
-<p>加强正则化（dropout、L2、label smoothing）<br>使用 early stopping<br>减小模型容量<br>使用 ensemble（模型集成）<br>合理划分训练&#x2F;验证集，避免数据泄漏</p>
-<h2 id="transformer的位置编码的基底是10000为什么设置10000"><a href="#transformer的位置编码的基底是10000为什么设置10000" class="headerlink" title="transformer的位置编码的基底是10000为什么设置10000"></a>transformer的位置编码的基底是10000为什么设置10000</h2><p>10000的作用就是让波长从几步覆盖到大约几万步的量级</p>
-<p>Transformer的典型设计d&#x3D;512，序列长度常见在几百几千，用10000作为基底刚刚好，低维（高频）负责局部结构，高维（低频）负责长距离结构</p>
-<p>10000不是必须的，只是默认基底，换别的也可以工作<br>基底变小，比如1000，整体更偏高频，更敏感短距离，但长距离表示能力变差<br>基底变大，比如100000，整体更偏低频，更强调长聚集，近距离分辨率可能变弱</p>
-<p>所以10000只是一个在常见序列长度范围内经验上稳定、实现上方便的选择。</p>
-<h2 id="讲一下-FlashAttention-的思想和做法"><a href="#讲一下-FlashAttention-的思想和做法" class="headerlink" title="讲一下 FlashAttention 的思想和做法"></a>讲一下 FlashAttention 的思想和做法</h2><h3 id="原始attention的瓶颈"><a href="#原始attention的瓶颈" class="headerlink" title="原始attention的瓶颈"></a>原始attention的瓶颈</h3><p>在GPU上，真正拖慢的是内存访问</p>
-<p>在标准实现中：<br>显式构造QK^T后写进HBM（显存）<br>从HBM读出来QK^T做softmax再写进HBM<br>从HBM读出来结果再乘V</p>
-<p>中间结果大且短命、又反复进出显存</p>
-<h3 id="Flash-attn的改进"><a href="#Flash-attn的改进" class="headerlink" title="Flash-attn的改进"></a>Flash-attn的改进</h3><p>不存下QK^T，而是边算边softmax边乘V，加速主要来自更少的显存读写<br>Attention可以分块并且结果依然严格等价，因为softmax可以在线计算</p>
-<p>最终计算需要维护的有:<br>按行：QK^T&#x2F;根号d_k最大值(e^x中的x最大值)，用于在计算时在指数位被减去，维持范围可控<br>分子 and 分母累计（分子是一个向量，分母是标量）<br>在分块时如果发现了更大的x，那么之前累计的分子&#x2F;分母必须整体乘一个比例因子，这个用数学计算推一下很简单就能算出来<br>分子除以分母得到分配了注意力的一个token</p>
-<p>对每行进行相同操作得到最终结果</p>
-<h3 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h3><p>causal mask:在未来区&#x2F;不合法的地方当作-∞，得到的e^x即为0<br>反向传播：反向时局部分块重算P，算完就用掉</p>
-<h2 id="RAG和GraphRAG"><a href="#RAG和GraphRAG" class="headerlink" title="RAG和GraphRAG"></a>RAG和GraphRAG</h2><h3 id="RAG（Retrieval-Augmented-Generation，检索增强生成）"><a href="#RAG（Retrieval-Augmented-Generation，检索增强生成）" class="headerlink" title="RAG（Retrieval-Augmented Generation，检索增强生成）"></a>RAG（Retrieval-Augmented Generation，检索增强生成）</h3><p>在生成之前，从外部知识源检索信息，并把检索结果作为上下文交给模型生成</p>
-<p>比较擅长回答局部问题，但如果问比较全局的问题比如“这堆文档主要讨论了什么主题”，它通常会embedding检索几段相关chunk-&gt;拼到prompt-&gt;生成，导致漏掉多样性</p>
-<p>GraphRAG就是针对这种问题提出的</p>
-<h3 id="GraphRAG"><a href="#GraphRAG" class="headerlink" title="GraphRAG"></a>GraphRAG</h3><p>1.把文本变成一种可被结构化检索&#x2F;汇总的主题摘要+图结构：<br>GraphRAG用LLM从文档里抽取：实体(entity)和关系(relation)，形成一个实体-关系图<br>然后对图做社区划分(community detection)，把联系紧密的实体分成社区<br>接着为每个社区预生成community summary</p>
-<p>2.用“社区摘要”做Map-Reduce式回答（global全局搜索）：<br>Map:对于每个社区摘要，让LLM生成“针对该问题的部分回答”<br>Reduce：把所有部分回答汇总&#x2F;再总结成最终答案</p>
-<p>在GraphRAG的官方文档里还有局部搜索&#x2F;DRIFT搜索</p>
-<p>局部(local)搜索和RAG有点像，但GraphRAG还会扩展到其邻居和相关概念来对特定实体进行推理，适用于谁负责、发生了什么，这样的具体实体&#x2F;关系的事实与推理问题</p>
-<p>DRIFT搜索则是在局部搜索的基础上增加了社区上下文搜索，补充上下文理解&#x2F;用于解释等</p>
-<h3 id="注意点"><a href="#注意点" class="headerlink" title="注意点"></a>注意点</h3><p>值得注意的是，GraphRAG虽然是RAG的扩展版，但应根据应用场景不同选择使用对象，而不是单纯认为GraphRAG就比RAG好。</p>
-<p>GraphRAG离线构建成本高，图质量依赖于抽取准确率。在问简单事实问题时不如RAG</p>
-<p>RAG最爱用的Top-K 向量搜索是“相似度驱动”，GraphRAG 是“结构驱动”。前者回答“哪段话最像问题”，后者回答“哪些对象和关系与问题有关”</p>
-<h2 id="为什么现在-Decoder-only-成为大模型的主流架构"><a href="#为什么现在-Decoder-only-成为大模型的主流架构" class="headerlink" title="为什么现在 Decoder - only 成为大模型的主流架构"></a>为什么现在 Decoder - only 成为大模型的主流架构</h2><h3 id="不同的架构主要都是在做什么"><a href="#不同的架构主要都是在做什么" class="headerlink" title="不同的架构主要都是在做什么"></a>不同的架构主要都是在做什么</h3><p>Encoder-only适用于学习&#x2F;理解语义，如将擅长对文本内容进行分析、分类，包括情感分析，更偏判别和表示，不适合自由生成等<br>Encoder-Decoder适用于条件生成，主要用于NLP，擅长处理输入和输出序列之前存在复杂映射关系的任务，比如翻译、摘要<br>Decoder-only在位置position上使用到了mask（保证自回归），相当于去掉encoder和cross attn，保留decoder block的Encoder-Decoder架构</p>
-<h3 id="为什么“Decoder-only”成为了主流"><a href="#为什么“Decoder-only”成为了主流" class="headerlink" title="为什么“Decoder-only”成为了主流"></a>为什么“Decoder-only”成为了主流</h3><p>Encoder-Decoder最早解决的是：明确 输入-&gt;输出，这么一条路<br>后来发现Decoder-only把输入也当成要生成的一部分即可，于是prompt token和answer token就统一成了一条序列，满足自回归的生成方式<br>介于decoder什么都能统一成next-token prediction的特性，其泛用面广，可以将多种任务统一成一种格式，如翻译、问答、对话 等。虽然encoder-decoder也能做，但天然具有局限性。<br>世界上最多的数据不是QA对也不是翻译对，而是连续文本，decoder-only的预训练不需要任何标注就能做到，并且自回归和kv cache十分契合。</p>
-<p>所以decoder-only赢的不是结构，而是范式，不过它只是通用大模型的目前最优解。在翻译、检索、表示学习等领域另外两种架构依然健在。</p>
-<p>trade-off:Decoder-only 在条件生成和对齐复杂输入时，结构表达不如 Encoder–Decoder 直接，但工程统一性更重要</p>
-<h2 id="了解过哪些模型训练优化的方法"><a href="#了解过哪些模型训练优化的方法" class="headerlink" title="了解过哪些模型训练优化的方法"></a>了解过哪些模型训练优化的方法</h2><p>模型训练优化本质是在算力、显存、通信开销和数值稳定性之间做取舍，不同的并行和显存优化策略，实际上是在这四个维度上移动瓶颈</p>
-<h3 id="并行与切分"><a href="#并行与切分" class="headerlink" title="并行与切分"></a>并行与切分</h3><p>数据并行（DP）：最基础，多卡分batch，同步梯度<br>张量并行（TP）：把矩阵乘按维度切到多卡（如QKV，FFN的线性层分片）<br>流水线并行（PP）：按层切，像装配线一样跑micro-batch<br>ZeRO：把optimizer state&#x2F;gradients&#x2F;parameters分片，显存降很多<br>3D并行:DP+TP+PP组合，大模型训练标配思路</p>
-<h3 id="训练时在省什么内存"><a href="#训练时在省什么内存" class="headerlink" title="训练时在省什么内存"></a>训练时在省什么内存</h3><p>Parameter（参数），模型权重W<br>Gradient（梯度），▽W<br>Optimizer states（优化器状态），比如Adam的一阶&#x2F;二阶矩m，v<br>Activations（激活&#x2F;中间结果）：前向为了反向要保存的中间张量</p>
-<p>不同并行策略主要在这四类上做取舍</p>
-<h3 id="显存优化：主要对付激活和optimizer-states"><a href="#显存优化：主要对付激活和optimizer-states" class="headerlink" title="显存优化：主要对付激活和optimizer states"></a>显存优化：主要对付激活和optimizer states</h3><p>Activation checkpointing：不存中间激活，反向时重算，省显存换算力（看到这里的时候在想，我去，这不就是flash-attn的做法么，实际上不然，flash-attn是只保留少量统计量在需要时局部算P；这里这个方法是保存一个检查点，反向需要的时候从检查点开始前向重新算一遍，是用计算换显存）<br>Offload：把optimizer state或参数挪到CPU&#x2F;SSD，吞吐会受影响但能训更大的模型<br>序列并行（sequence parallel）：在TP下一步把B×S×H的激活沿着序列维S分片到不同GPU，从而降低activation memory峰值，常见于Megatron-LM</p>
-<h3 id="算子-数值：提升吞吐"><a href="#算子-数值：提升吞吐" class="headerlink" title="算子&#x2F;数值：提升吞吐"></a>算子&#x2F;数值：提升吞吐</h3><p>混合精度训练</p>
-<p>梯度累积：把大batch拆成k个micro-batch，先不更新参数，梯度先加起来，累积k次做一次更新</p>
-<p>梯度裁剪：梯度太大时把它按比例缩小</p>
-<p>loss scaling：FP16 会出现问题：梯度太小会下溢变成 0<br>做法：先把 loss 乘一个大系数 S，让梯度也按比例变大；反向完再把梯度除回去</p>
-<p>fused kernels：把多个小算子合成为一次大操作</p>
-<h3 id="Attention的训练优化"><a href="#Attention的训练优化" class="headerlink" title="Attention的训练优化"></a>Attention的训练优化</h3><p>FlashAttention&#x2F;memory-efficient attention<br>长上下文训练技巧：RoPE scaling、位置插值、chunked attention等</p>
-<h2 id="了解过哪些模型推理优化的方法"><a href="#了解过哪些模型推理优化的方法" class="headerlink" title="了解过哪些模型推理优化的方法"></a>了解过哪些模型推理优化的方法</h2><h3 id="瓶颈"><a href="#瓶颈" class="headerlink" title="瓶颈"></a>瓶颈</h3><p>算力、显存、显存带宽、调度效率</p>
-<h3 id="量化"><a href="#量化" class="headerlink" title="量化"></a>量化</h3><p>weight-only量化：最稳，改动小，省显存，提cache命中率<br>weight+activation量化：更省但更容易数值不稳<br>KV cache量化：对长上下文关键</p>
-<h3 id="结构层面优化"><a href="#结构层面优化" class="headerlink" title="结构层面优化"></a>结构层面优化</h3><p>MQA(Multi-QueryAttention):每个head的Query共享K和V矩阵，k v只有一头<br>GQA(Grouped-QueryAttention):每个head的Query共享K和V矩阵中的n头，k v有若干头（&lt; head头）<br>蒸馏：大模型教小模型，少层少参数<br>MoE：每token只激活部分专家（算量低但系统复杂）<br>剪枝&#x2F;稀疏化</p>
-<h3 id="算子级加速"><a href="#算子级加速" class="headerlink" title="算子级加速"></a>算子级加速</h3><p>FlashAttn</p>
-<h3 id="参考标准"><a href="#参考标准" class="headerlink" title="参考标准"></a>参考标准</h3><p>第一类是 减少重复计算：自回归生成基本都会用 KV cache，避免每个 token 反复算历史注意力；在服务端会进一步做 prefix cache &#x2F; KV 复用，对重复前缀的请求能明显降 TTFT 和成本。<br>第二类是 提升 GPU 利用率和显存效率：比如 continuous batching 把不同长度请求持续拼 batch；配合 paged KV &#x2F; PagedAttention 这类分页管理 KV cache，减少显存碎片、提高吞吐，长上下文并发更稳。<br>第三类是 算子级加速：注意力通常是瓶颈，会用 FlashAttention 这种 memory-efficient attention 来降低显存读写、提升速度；线性层会靠更好的 GEMM&#x2F;kernels 和算子融合。<br>第四类是 降低精度&#x2F;压缩：比如 INT8&#x2F;INT4 量化（权重量化、甚至 KV cache 量化）来降显存和带宽，从而提升并发、降低成本，同时要关注精度回归。<br>另外还有 speculative decoding 这种解码加速：用小模型先草拟 token，大模型验证，能减少大模型前向次数，在输出较长时收益明显。<br>实际落地我会看目标：如果追吞吐就是 batching+paged KV+flash attention；如果追首 token 延迟就优先 prefix cache、减少 prefill 成本；如果显存紧就量化和 GQA&#x2F;MQA 这类减少 KV 占用的结构。”</p>
-<h2 id="如果要提升大模型的多轮对话能力，你有哪些可以改进的点"><a href="#如果要提升大模型的多轮对话能力，你有哪些可以改进的点" class="headerlink" title="如果要提升大模型的多轮对话能力，你有哪些可以改进的点"></a>如果要提升大模型的多轮对话能力，你有哪些可以改进的点</h2><h3 id="主线"><a href="#主线" class="headerlink" title="主线"></a>主线</h3><p>让模型在长对话里持续保持目标、记住关键事实、少跑题、少出幻觉、能纠错</p>
-<h3 id="数据层面-1"><a href="#数据层面-1" class="headerlink" title="数据层面"></a>数据层面</h3><p>数据里加目标&#x2F;偏好&#x2F;已知事实&#x2F;待确认点等结构化字段，添加负样本和对比数据、让模型对比学习，构造需要引用第N轮信息才能答对的样本，避免模型指挥就近记忆</p>
-<h3 id="训练目标是让模型学会对话管理而不是只答题"><a href="#训练目标是让模型学会对话管理而不是只答题" class="headerlink" title="训练目标是让模型学会对话管理而不是只答题"></a>训练目标是让模型学会对话管理而不是只答题</h3><p>多任务训练，不知训练next-token，还有关键信息抽取、对话状态跟你更新、引用对话证据<br>偏好对齐（DPO&#x2F;RLHF类）<br>自我纠错训练，让模型学会道歉、回滚，修正并解释原因。如果直接用‘用户说你错了 → 道歉并改答案’的数据做训练，会明显放大幻觉。实际需要把纠错拆成两步：先验证是否真的错了，再决定是修正、澄清还是坚持原结论，而且修正必须绑定明确证据，否则只是两次自由生成</p>
-<h3 id="记忆机制"><a href="#记忆机制" class="headerlink" title="记忆机制"></a>记忆机制</h3><p>短期工作记忆：对最近几轮做结构化摘要，每轮更新一次，作为系统级隐藏上下文<br>长期记忆：偏好&#x2F;背景等存成可检索条目，每次对话先检索再注入<br>记忆写入策略：稳定性高+未来复用价值高+用户明确期望<br>冲突处理：新信息与旧记忆冲突，优先触发澄清而非覆盖</p>
-<p>实际系统中，过度写入长期记忆会放大早期错误，导致模型在后续对话中持续基于错误前提推理，因此记忆管理比记忆容量更重要</p>
-<h3 id="上下文管理"><a href="#上下文管理" class="headerlink" title="上下文管理"></a>上下文管理</h3><p>分层上下文：系统&#x2F;策略；结构化摘要；近邻原文对话<br>引用式回答<br>话题切换检测</p>
-<h3 id="工具检索"><a href="#工具检索" class="headerlink" title="工具检索"></a>工具检索</h3><p>RAG针对多轮等</p>
-<h2 id="为什么有了-SFT-之后还需要-RLHF"><a href="#为什么有了-SFT-之后还需要-RLHF" class="headerlink" title="为什么有了 SFT 之后还需要 RLHF"></a>为什么有了 SFT 之后还需要 RLHF</h2><h3 id="SFT（Supervised-Fine-Tuning，监督微调）"><a href="#SFT（Supervised-Fine-Tuning，监督微调）" class="headerlink" title="SFT（Supervised Fine-Tuning，监督微调）"></a>SFT（Supervised Fine-Tuning，监督微调）</h3><p>给定输入和输出，模型来学习从输入到输出的这种映射关系。在SFT中，做的是next token prediction，目标是最大化下一个token的准确率</p>
-<h3 id="RLHF（Reinforcement-Learning-from-Human-Feedback）"><a href="#RLHF（Reinforcement-Learning-from-Human-Feedback）" class="headerlink" title="RLHF（Reinforcement Learning from Human Feedback）"></a>RLHF（Reinforcement Learning from Human Feedback）</h3><p>会先训练一个reward model，让reward model去学习什么要的回复是更符合人类偏好，再让这个reward model去指导大模型进行学习，从而引导大模型输出更符合人类标注的回复</p>
-<h3 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h3><p>SFT的目标是模仿，更倾向于复刻数据分布，会被示范数据限制：数据中可能会有隐性坏习惯，比如过于啰嗦、迎合用户等；也可能不同标注者风格不同导致示例数据不一致<br>RLHF的目标是偏好优化，会把这种偏好变成一个可优化的奖励，RLHF可以用偏好比较把坏行为&#x2F;风格压下去<br>很多关键质量维度并不是 对&#x2F;错 二分类，而是需要：更礼貌、更简洁、更遵循指令等。这些很难用一条标准答案概括</p>
-<p>在事实不确定时，SFT往往倾向于给出一个看起来像答案的答案。人类更加偏好不确定就说明不确定、或给出可验证步骤，这种保守且尽量没有幻觉的偏好，用RLHF正好</p>
-<p>SFT可以打底学习指令跟随和基本对话能力，RLHF对齐偏好、安全、语气等，是不同的分工</p>
-<p>即使 SFT 数据足够干净，SFT 仍然只能拟合条件分布 P(y∣x)，而无法显式表达在多个可行解中更偏好哪一个，这也是偏好学习RLHF不可替代的原因。</p>
-<h2 id="PPO-和-DPO-的主要思想是什么"><a href="#PPO-和-DPO-的主要思想是什么" class="headerlink" title="PPO 和 DPO 的主要思想是什么"></a>PPO 和 DPO 的主要思想是什么</h2><h3 id="PPO-Proximal-Policy-Optimization"><a href="#PPO-Proximal-Policy-Optimization" class="headerlink" title="PPO(Proximal Policy Optimization)"></a>PPO(Proximal Policy Optimization)</h3><p>用人类偏好训练出一个reward model(RM)<br>用PPO在RM给的reward下，把大模型当作策略优化</p>
-<p>PPO关键思想是：限制每次更新，别离策略太远<br>首先PPO不允许新策略在某个token上的概率涨&#x2F;跌太多，用一个clip区间超出就不给更多奖励</p>
-<p>在RLHF中，Reward通常会&#x3D; RMscore-βKL（πθ​∥πref） 防止语言能力塌陷的生命线<br>πθ：当前正在被训练、会不断变化的模型策略（new &#x2F; updated policy）<br>πref：一个固定的参考策略（reference policy），通常是 SFT 后冻结的大模型</p>
-<p>PPO 通过裁剪更新幅度和 KL 正则，在保证训练稳定的前提下，用强化学习最大化人类偏好奖励</p>
-<h3 id="DPO（Direct-Preference-Optimization）"><a href="#DPO（Direct-Preference-Optimization）" class="headerlink" title="DPO（Direct Preference Optimization）"></a>DPO（Direct Preference Optimization）</h3><p>DPO把人类偏好建模为：在同一个prompt偏好下，人类更偏好回答A，而不是B，然后直接优化在当前prompt前提下提高A的概率，降低B的概率<br>通过直接优化偏好对的概率差，在无需显式强化学习的情况下完成偏好对齐，本质上是把 PPO 的最优解转成一个对比式的监督目标，工程更简单、训练更稳定</p>
-<h2 id="大模型的灾难性遗忘问题怎么解决"><a href="#大模型的灾难性遗忘问题怎么解决" class="headerlink" title="大模型的灾难性遗忘问题怎么解决"></a>大模型的灾难性遗忘问题怎么解决</h2><h3 id="保留关键参数"><a href="#保留关键参数" class="headerlink" title="保留关键参数"></a>保留关键参数</h3><p>代表思路EWC、SI、MAS<br>只适合小模型&#x2F;少任务，因为重要性估计不稳定，并且任务多了之后所有参数都很重要</p>
-<h3 id="复习"><a href="#复习" class="headerlink" title="复习"></a>复习</h3><p>保存旧任务样本，训练时和新任务样本混着来<br>用模型自己生成旧任务数据进行训练，但这样噪音会被放大，轮数过多记忆会变形</p>
-<h3 id="结构隔离"><a href="#结构隔离" class="headerlink" title="结构隔离"></a>结构隔离</h3><p>lora&#x2F;MoE&#x2F;Adapter&#x2F;Progressive Networks<br>代价：参数量膨胀&#x2F;推理复杂度上升</p>
-<h3 id="idea"><a href="#idea" class="headerlink" title="idea"></a>idea</h3><p>有限容量系统在没有外部记忆的情况下同时保持所有过去最优解是不可能的，值得思考的是，什么应该被忘掉和什么值得被记住</p>
-<h2 id="了解-KV-cache-吗，-GQA-的思想是什么"><a href="#了解-KV-cache-吗，-GQA-的思想是什么" class="headerlink" title="了解 KV cache 吗， GQA 的思想是什么"></a>了解 KV cache 吗， GQA 的思想是什么</h2><h3 id="KV-cache"><a href="#KV-cache" class="headerlink" title="KV cache"></a>KV cache</h3><p>把“历史 token 的 K&#x2F;V”当作推理的外部记忆，避免重复计算</p>
-<h3 id="GQA（Grouped-Query-Attention）"><a href="#GQA（Grouped-Query-Attention）" class="headerlink" title="GQA（Grouped-Query Attention）"></a>GQA（Grouped-Query Attention）</h3><p>之前在上面提到过，就是MQA和MHA的折中方案，比MHA占用显存少，比MQA精度高，原理是让多个 Q heads 共享更少套 K&#x2F;V</p>
-<h2 id="transformer和llama的LN有什么区别，手写RMSNorm"><a href="#transformer和llama的LN有什么区别，手写RMSNorm" class="headerlink" title="transformer和llama的LN有什么区别，手写RMSNorm"></a>transformer和llama的LN有什么区别，手写RMSNorm</h2><h3 id="transformer的是LayNorm"><a href="#transformer的是LayNorm" class="headerlink" title="transformer的是LayNorm"></a>transformer的是LayNorm</h3><p>对每个 token 的隐藏向量做<br>减均值 + 除标准差，然后再做可学习的缩放&#x2F;平移</p>
-<h3 id="llama的LN实际上是RMSNorm"><a href="#llama的LN实际上是RMSNorm" class="headerlink" title="llama的LN实际上是RMSNorm"></a>llama的LN实际上是RMSNorm</h3><p>不减均值，只用均方根做尺度归一化，通常没有 β</p>
-<h3 id="对比"><a href="#对比" class="headerlink" title="对比"></a>对比</h3><p>LayerNorm：稳、全能、代价稍高<br>RMSNorm：简、快、在现代 Transformer 里“刚好够用”<br>LLaMA 的选择不是因为 LN 不好，而是因为它“用不着那么多”</p>
-<h2 id="FFN有什么不同，写Relu和SwiGLU"><a href="#FFN有什么不同，写Relu和SwiGLU" class="headerlink" title="FFN有什么不同，写Relu和SwiGLU"></a>FFN有什么不同，写Relu和SwiGLU</h2><p>在 Transformer 里，FFN（Feed-Forward Network）是逐 token 的 MLP，不做 token 间交互，只在 hidden 维度上“拉伸 → 非线性 → 压回”。</p>
-<h3 id="ReLU-FFN"><a href="#ReLU-FFN" class="headerlink" title="ReLU FFN"></a>ReLU FFN</h3><h3 id="SwiGLU，LLaMA的核心FFN"><a href="#SwiGLU，LLaMA的核心FFN" class="headerlink" title="SwiGLU，LLaMA的核心FFN"></a>SwiGLU，LLaMA的核心FFN</h3><p>a &#x3D; w1(x)              # 内容<br>g &#x3D; F.silu(w2(x))      # 门<br>out &#x3D; w3(a * g)        # 门控后投影回 dim<br>表达力主要来自：门随输入变化，让同一个 FFN 在不同 token 上表现得像“不同的函数”。</p>
+                <p>因为大模型只是比较杂比较乱</p>
+<p>我又不太擅长零散的记忆</p>
+<p>所以把训练和推理的一些知识以一种顺序让自己能串联起来</p>
+<h2 id="训练"><a href="#训练" class="headerlink" title="训练"></a>训练</h2><p>首先训练模型的步骤我们走一个完整流程</p>
+<p>文本-&gt;张量-&gt;loss-&gt;梯度-&gt;参数更新-&gt;checkpoint-&gt;可部署模型</p>
+<p>一开始我们有文本&#x2F;样本，此时他们：<br>如果要做预训练，为一段段文本doc<br>如果做SFT，为prompt + answer<br>这时候他们都还是字符串</p>
+<p>文本在开始训练前，需要进行清洗和格式化：<br>去重、统一编码、过滤低质内容之类的<br>如果是对SFT，则还要加上提示&#x2F;标签、分隔符等</p>
+<p>之后经过tokenizer字符串会变成整数序列token ids，序列中每个整数之后都会查表替换为一个token向量</p>
+<p>多条样本会被打包成batch，进行:<br>padding、attention_mask等操作</p>
+<p>之后则是跑前向计算，token ids被embedding为token向量，再被计算为logits（下一个token的打分）:<br>input_ids[B,T]-&gt;hidden[B,T,D]<br>-&gt;多层transformer block -&gt;输出层-&gt;logits[B,T,V]     (V&#x3D;词表大小)</p>
+<p>得到logits了就可以计算loss:logits + labels -&gt; scalar loss<br>用交叉熵(cross entropy):<br>对每个位置t，用logits[:,t,:]预测label[:,t]<br>mask掉padding<br>平均得到一个标量loss</p>
+<p>有了loss之后开始反向传播，毕竟loss就是反应模型训练程度的参数<br>loss.backward()后：每个可训练参数都有梯度grad<br>输出：参数梯度</p>
+<p>接着用参数梯度更新参数：optimizer step<br>常见AdamW优化器做：动量&#x2F;二阶矩更新、weight decay、更新参数<br>训练技巧也往往在这里出现：如梯度裁剪、学习率调度、梯度累积等</p>
+<p>这样就训练了一步了，之后循环执行取 batch → 前向 → loss → 反向 → 更新<br>并监控：loss、困惑度perplexity、稳定性等</p>
+<p>保存checkpoint（可恢复训练的模型状态），完整的checkpoint会包含：<br>模型权重、optimizer states、学习率调度器状态、当前step&#x2F;随机种子<br>可用于断点续训、回滚、对比试验</p>
+<p>导出可用模型：训练态-&gt;部署态<br>训练结束后，你通常做这些事情让它“可上线”：<br>只保留模型权重（不带 optimizer states）<br>如果是LoRA&#x2F;Adapter：选择<br>合并（merge）到权重，或保留为可切换模块<br>（可选）量化（INT8&#x2F;INT4）<br>（可选）转换推理引擎格式（TensorRT-LLM &#x2F; vLLM 等）<br>配置 tokenizer、特殊 token、对话模板<br>输出：一个可推理的模型包（权重 + tokenizer + 配置）</p>
+<p>最后推理沿着与上线</p>
+<h3 id="好，以上就是一个示例的完整训练流程了"><a href="#好，以上就是一个示例的完整训练流程了" class="headerlink" title="好，以上就是一个示例的完整训练流程了"></a>好，以上就是一个示例的完整训练流程了</h3><p>接下来让我们看看有哪些训练优化技术可以用在里面</p>
 
                 
             </div>
@@ -525,7 +442,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://hhelloe.github.io/2026/01/20/%E9%9D%A2%E7%BB%8F/">http://hhelloe.github.io/2026/01/20/%E9%9D%A2%E7%BB%8F/</a>
+                    <a href="http://hhelloe.github.io/2026/01/27/%E8%AE%AD%E7%BB%83%E6%8E%A8%E7%90%86%E4%BC%98%E5%8C%96/">http://hhelloe.github.io/2026/01/27/%E8%AE%AD%E7%BB%83%E6%8E%A8%E7%90%86%E4%BC%98%E5%8C%96/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -880,9 +797,10 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
                 <a href="/2026/01/27/%E8%AE%AD%E7%BB%83%E6%8E%A8%E7%90%86%E4%BC%98%E5%8C%96/">
                     <div class="card-image">
@@ -900,9 +818,9 @@
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2026-01-27
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2026-01-27
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-user fa-fw"></i>
@@ -911,6 +829,7 @@
                         </span>
                     </div>
                 </div>
+
                 
             </div>
         </div>
@@ -921,13 +840,13 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2026/01/20/DiT/">
+                <a href="/2026/01/20/%E9%9D%A2%E7%BB%8F/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="DiT">
+                        <img src="/medias/featureimages/16.jpg" class="responsive-img" alt="大模型基础知识">
                         
-                        <span class="card-title">DiT</span>
+                        <span class="card-title">大模型基础知识</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
