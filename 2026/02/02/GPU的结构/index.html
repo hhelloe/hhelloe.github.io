@@ -4,9 +4,10 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="blog of hhelloe">
-    <meta name="description" content="很好，这个信息非常关键。4090 + Python 熟 + C++ 有基础 + 框架不熟，这在“推理优化工程师候选人”里是非常好的起点，而且路线应该明显偏向 “先框架 → 再 CUDA → 最后深度 C++”，而不是反过来。
-下面我给你一条">
+    <meta name="keywords" content="GPU结构, blog of hhelloe">
+    <meta name="description" content="接触了一些cuda编程的概念后我觉得得先从GPU的结构下手按我逻辑上比较舒服的顺序梳理一下结构
+GPU由哪些大部件组成一整张GPU卡由大量SM+全局缓存+显存接口组成
+GPU的主存为HBM&amp;#x2F;GDDR（显存），存放：模型权重&amp;#x2">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -18,7 +19,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>blog of hhelloe</title>
+    <title>GPU结构 | blog of hhelloe</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -333,12 +334,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/13.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title"></h1>
+                    <h1 class="description center-align post-title">GPU结构</h1>
                 </div>
             </div>
         </div>
@@ -374,7 +375,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2026-01-27
+                    2026-02-02
                 </div>
                 
 
@@ -395,207 +396,23 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>很好，这个信息非常关键。<br><strong>4090 + Python 熟 + C++ 有基础 + 框架不熟</strong>，这在“推理优化工程师候选人”里是<strong>非常好的起点</strong>，而且路线应该明显偏向 <strong>“先框架 → 再 CUDA → 最后深度 C++”</strong>，而不是反过来。</p>
-<p>下面我给你一条<strong>为 4090 + 当前能力定制的 12～16 周硬核路线</strong>。每一步都尽量：<br>👉 不浪费时间<br>👉 能产出可写进简历的成果<br>👉 完全贴合 vLLM &#x2F; SGLang &#x2F; 推理优化岗位</p>
-<hr>
-<h2 id="总体战略（先说结论）"><a href="#总体战略（先说结论）" class="headerlink" title="总体战略（先说结论）"></a>总体战略（先说结论）</h2><p>你的正确打法是：</p>
-<blockquote>
-<p><strong>用 Python 驯服框架 → 用 profiler 发现瓶颈 → 用 CUDA&#x2F;C++ 精准打击</strong></p>
-</blockquote>
-<p>不要一开始就啃 CUDA 大部头，那样会慢，而且和推理引擎脱节。</p>
-<hr>
-<h1 id="阶段-1：把-vLLM-SGLang-“用到烂”（第-1–2-周）"><a href="#阶段-1：把-vLLM-SGLang-“用到烂”（第-1–2-周）" class="headerlink" title="阶段 1：把 vLLM &#x2F; SGLang “用到烂”（第 1–2 周）"></a>阶段 1：把 vLLM &#x2F; SGLang “用到烂”（第 1–2 周）</h1><p>目标：<br>你要能<strong>闭着眼睛回答</strong>：</p>
-<ul>
-<li>为什么 vLLM 快？</li>
-<li>TTFT 和 TPOT 谁慢在什么阶段？</li>
-<li>prefill &#x2F; decode 各自吃什么资源？</li>
-</ul>
-<h3 id="你现在最该做的第一件事"><a href="#你现在最该做的第一件事" class="headerlink" title="你现在最该做的第一件事"></a>你现在最该做的第一件事</h3><p><strong>只干一件事：系统性 benchmark vLLM &amp; SGLang</strong></p>
-<h4 id="任务-1：推理性能基线（必做）"><a href="#任务-1：推理性能基线（必做）" class="headerlink" title="任务 1：推理性能基线（必做）"></a>任务 1：推理性能基线（必做）</h4><p>在 4090 上跑：</p>
-<ul>
-<li><p>模型：LLaMA-7B 或 Qwen2.5-7B（FP16）</p>
-</li>
-<li><p>框架：vLLM + SGLang</p>
-</li>
-<li><p>维度：</p>
-<ul>
-<li>并发：1 &#x2F; 4 &#x2F; 8 &#x2F; 16 &#x2F; 32</li>
-<li>输入长度：128 &#x2F; 512 &#x2F; 2k</li>
-<li>输出长度：128 &#x2F; 512</li>
-</ul>
-</li>
-</ul>
-<p>测这些指标：</p>
-<ul>
-<li>TTFT</li>
-<li>TPOT</li>
-<li>吞吐（tokens&#x2F;s）</li>
-<li>显存占用</li>
-</ul>
-<p>⚠️ 不要只跑一次，要 <strong>稳定统计 P50&#x2F;P95</strong></p>
-<h4 id="你此时该“悟到”的点"><a href="#你此时该“悟到”的点" class="headerlink" title="你此时该“悟到”的点"></a>你此时该“悟到”的点</h4><ul>
-<li>prefill 是 GEMM-heavy，decode 是 memory-bound</li>
-<li>高并发下 TTFT 爆炸 ≠ GPU 算力不够，而是调度 &#x2F; 批处理</li>
-<li>vLLM 的 Continuous Batching 为什么对 decode 极其友好</li>
-</ul>
-<h4 id="产出"><a href="#产出" class="headerlink" title="产出"></a>产出</h4><ul>
-<li><p>一个 repo：<code>llm-inference-benchmark</code></p>
-</li>
-<li><p>README 里有 <strong>结论性语言</strong>：</p>
-<blockquote>
-<p>“在 4090 上，当并发 &gt; 16 时，decode 阶段成为瓶颈，TPOT 主要受 KV Cache 带宽限制”</p>
-</blockquote>
-</li>
-</ul>
-<p>这一步就已经<strong>秒杀 70% 只会“用模型”的人</strong>。</p>
-<hr>
-<h1 id="阶段-2：读懂框架核心路径（第-3–5-周）"><a href="#阶段-2：读懂框架核心路径（第-3–5-周）" class="headerlink" title="阶段 2：读懂框架核心路径（第 3–5 周）"></a>阶段 2：读懂框架核心路径（第 3–5 周）</h1><p>目标：<br>你要能在脑子里画出 <strong>“一次请求从 HTTP 到 GPU kernel” 的路径图</strong>。</p>
-<h3 id="推荐顺序（非常重要）"><a href="#推荐顺序（非常重要）" class="headerlink" title="推荐顺序（非常重要）"></a>推荐顺序（非常重要）</h3><p><strong>不要全读源码，读“热路径”</strong></p>
-<h4 id="vLLM-必读模块"><a href="#vLLM-必读模块" class="headerlink" title="vLLM 必读模块"></a>vLLM 必读模块</h4><p>只看这几块（别贪）：</p>
-<ul>
-<li><code>engine/</code>（请求如何进入 engine）</li>
-<li><code>scheduler.py</code>（核心）</li>
-<li><code>worker/</code>（GPU worker）</li>
-<li><code>paged_kv_cache</code> 相关代码</li>
-</ul>
-<p>你要回答的问题：</p>
-<ul>
-<li>请求是如何被拆成 prefill + decode step？</li>
-<li>Continuous Batching 是怎么避免 decode 阶段 GPU 空转的？</li>
-<li>KV Cache 为什么要分页？</li>
-</ul>
-<h4 id="SGLang"><a href="#SGLang" class="headerlink" title="SGLang"></a>SGLang</h4><p>重点不是 CUDA，而是：</p>
-<ul>
-<li>请求编排逻辑</li>
-<li>prefill&#x2F;decode pipeline</li>
-<li>cache 复用策略</li>
-</ul>
-<hr>
-<h3 id="阶段-2-必做项目（非常关键）"><a href="#阶段-2-必做项目（非常关键）" class="headerlink" title="阶段 2 必做项目（非常关键）"></a>阶段 2 必做项目（非常关键）</h3><p><strong>项目 B：改一个“可测量”的行为</strong></p>
-<p>选一个 <strong>Python 层</strong> 就能改的点（对你现在最友好）：</p>
-<h4 id="示例方向（任选其一）"><a href="#示例方向（任选其一）" class="headerlink" title="示例方向（任选其一）"></a>示例方向（任选其一）</h4><ul>
-<li>改调度策略（例如限制长 prompt 抢占）</li>
-<li>在 decode 阶段插入简单的优先级策略</li>
-<li>改 KV cache page size &#x2F; eviction 策略（实验性质）</li>
-</ul>
-<p>你不需要“很牛”，你只需要：</p>
-<ul>
-<li>改之前 vs 改之后</li>
-<li>benchmark 证明 <strong>P95 延迟 or 吞吐有变化</strong></li>
-</ul>
-<h4 id="产出-1"><a href="#产出-1" class="headerlink" title="产出"></a>产出</h4><ul>
-<li><p>一个 PR（哪怕是实验 PR）</p>
-</li>
-<li><p>一篇 README：</p>
-<ul>
-<li>问题是什么</li>
-<li>为什么怀疑这里慢</li>
-<li>实验结果</li>
-<li>局限性</li>
-</ul>
-</li>
-</ul>
-<p>面试官看到这个，基本会默认你“真改过推理引擎”。</p>
-<hr>
-<h1 id="阶段-3：4090-上的-CUDA-实战（第-6–9-周）"><a href="#阶段-3：4090-上的-CUDA-实战（第-6–9-周）" class="headerlink" title="阶段 3：4090 上的 CUDA 实战（第 6–9 周）"></a>阶段 3：4090 上的 CUDA 实战（第 6–9 周）</h1><p>现在才轮到 CUDA。</p>
-<h3 id="为什么现在才上-CUDA？"><a href="#为什么现在才上-CUDA？" class="headerlink" title="为什么现在才上 CUDA？"></a>为什么现在才上 CUDA？</h3><p>因为你现在：</p>
-<ul>
-<li>知道 <strong>慢在哪里</strong></li>
-<li>知道 <strong>哪个 kernel 值得优化</strong></li>
-<li>不会“瞎写 kernel”</li>
-</ul>
-<hr>
-<h2 id="CUDA-学习方式（非常重要）"><a href="#CUDA-学习方式（非常重要）" class="headerlink" title="CUDA 学习方式（非常重要）"></a>CUDA 学习方式（非常重要）</h2><p>不要系统学 CUDA，直接 <strong>以推理算子为中心学</strong>。</p>
-<h3 id="推荐算子（按性价比排序）"><a href="#推荐算子（按性价比排序）" class="headerlink" title="推荐算子（按性价比排序）"></a>推荐算子（按性价比排序）</h3><ol>
-<li>RMSNorm &#x2F; LayerNorm</li>
-<li>RoPE</li>
-<li>Sampling（top-k &#x2F; top-p）</li>
-<li>logits 后处理</li>
-</ol>
-<h3 id="必做项目-C"><a href="#必做项目-C" class="headerlink" title="必做项目 C"></a>必做项目 C</h3><p><strong>项目：PyTorch CUDA Extension + 性能对比</strong></p>
-<p>流程：</p>
-<ol>
-<li>用 PyTorch baseline（Python）</li>
-<li>写 C++&#x2F;CUDA Extension</li>
-<li>Nsight Systems 看 timeline</li>
-<li>Nsight Compute 看 kernel 指标</li>
-<li>对比 TPOT &#x2F; kernel time</li>
-</ol>
-<p>你要学会说这种话：</p>
-<blockquote>
-<p>“这个 kernel 之前是 memory-bound，L2 hit rate 低，通过重排访存 + shared memory，DRAM throughput 提升 1.4x”</p>
-</blockquote>
-<p>⚠️ 4090 是 Ada 架构，你一定要：</p>
-<ul>
-<li>看 tensor core 是否真的在用</li>
-<li>看是不是被 memory 带宽卡死</li>
-</ul>
-<hr>
-<h1 id="阶段-4：量化（第-10–13-周）"><a href="#阶段-4：量化（第-10–13-周）" class="headerlink" title="阶段 4：量化（第 10–13 周）"></a>阶段 4：量化（第 10–13 周）</h1><p>你这张 4090 <strong>非常适合做量化实验</strong>。</p>
-<h3 id="推荐顺序"><a href="#推荐顺序" class="headerlink" title="推荐顺序"></a>推荐顺序</h3><ol>
-<li>FP16 → INT8（smoothquant &#x2F; AWQ）</li>
-<li>再看 INT4（GPTQ）</li>
-</ol>
-<h3 id="项目-D（端到端量化）"><a href="#项目-D（端到端量化）" class="headerlink" title="项目 D（端到端量化）"></a>项目 D（端到端量化）</h3><ul>
-<li><p>同一个模型</p>
-</li>
-<li><p>同一个 workload</p>
-</li>
-<li><p>对比：</p>
-<ul>
-<li>显存</li>
-<li>吞吐</li>
-<li>TTFT</li>
-<li>输出质量（简单 task）</li>
-</ul>
-</li>
-</ul>
-<p>重点不是“量化理论”，而是：</p>
-<blockquote>
-<p><strong>量化是否真的加速了你这个 workload？</strong></p>
-</blockquote>
-<p>你会发现：</p>
-<ul>
-<li>有些量化提升算力但不提速（decode 被 memory 卡死）</li>
-<li>KV Cache 才是显存大头</li>
-</ul>
-<p>这正是推理工程师的价值判断。</p>
-<hr>
-<h1 id="你的“最终人设”（非常重要）"><a href="#你的“最终人设”（非常重要）" class="headerlink" title="你的“最终人设”（非常重要）"></a>你的“最终人设”（非常重要）</h1><p>当你走完这条路线，你在面试中的身份不是：</p>
-<blockquote>
-<p>“我学过 CUDA &#x2F; 我看过 vLLM”</p>
-</blockquote>
-<p>而是：</p>
-<blockquote>
-<p><strong>“我在 4090 上系统性分析过 vLLM&#x2F;SGLang 推理瓶颈，并做过源码级与 kernel 级优化，有完整 benchmark 以及 profiler 证据。”</strong></p>
-</blockquote>
-<p>这是 <strong>实战型推理优化工程师</strong>。</p>
-<hr>
-<h2 id="下一步建议（很具体）"><a href="#下一步建议（很具体）" class="headerlink" title="下一步建议（很具体）"></a>下一步建议（很具体）</h2><p>你现在 <strong>下一步就该做的事</strong>：</p>
-<ol>
-<li><p>这周内：</p>
-<ul>
-<li>跑 vLLM + SGLang 的系统 benchmark</li>
-</ul>
-</li>
-<li><p>下周：</p>
-<ul>
-<li>开始读 vLLM scheduler + worker</li>
-</ul>
-</li>
-<li><p>同时：</p>
-<ul>
-<li>搭 Nsight Systems &#x2F; Compute</li>
-</ul>
-</li>
-</ol>
-<p>如果你愿意，下一步我可以直接帮你 <strong>选一个“最适合你第一个改的 vLLM 点”</strong>，并告诉你：</p>
-<ul>
-<li>该看哪几个文件</li>
-<li>哪个函数最值得下手</li>
-<li>怎么设计 benchmark 才像“线上场景”</li>
-</ul>
-<p>你已经站在一个非常好的起跑线上了，这条路走对了，半年内你就会明显和普通“模型工程师”拉开差距。</p>
+                <p>接触了一些cuda编程的概念后我觉得得先从GPU的结构下手<br>按我逻辑上比较舒服的顺序梳理一下结构</p>
+<h2 id="GPU由哪些大部件组成"><a href="#GPU由哪些大部件组成" class="headerlink" title="GPU由哪些大部件组成"></a>GPU由哪些大部件组成</h2><p>一整张GPU卡由大量SM+全局缓存+显存接口组成</p>
+<p>GPU的主存为HBM&#x2F;GDDR（显存），存放：模型权重&#x2F;KV cache&#x2F;激活&#x2F;中间张量</p>
+<p>整个GPU共享L2 Cache（全局缓存）</p>
+<p>专用硬件单元Copy Engines负责CPU与GPU之间的内存拷贝</p>
+<p>Interconnect是多卡训练&#x2F;推理的通信通道</p>
+<h2 id="GPU内部并行计算如何被调度"><a href="#GPU内部并行计算如何被调度" class="headerlink" title="GPU内部并行计算如何被调度"></a>GPU内部并行计算如何被调度</h2><p>SM是GPU的基本运算单元，一个GPU有几十到上百个</p>
+<p>Warp Scheduler（调度器）在SM内有1~多个，以warp（通常32线程）为单位发射指令</p>
+<p>Execution Units（执行单元）：CUDA Cores&#x2F;Tensor Cores&#x2F;SFU</p>
+<p>一个SM可同时驻留多个thread blocks，决定occupancy</p>
+<p>Shared Memory&#x2F;L1 Cache每个SM一份，前者程序员显式管理，后者硬件自动缓存</p>
+<h2 id="单个线程如何执行指令和访问数据"><a href="#单个线程如何执行指令和访问数据" class="headerlink" title="单个线程如何执行指令和访问数据"></a>单个线程如何执行指令和访问数据</h2><p>Thread是CUDA中最小的执行实体</p>
+<p>Warp是由32个线程组成的执行小队，是实际调度与执行的最小单位，SIMT（Single Instruction，Multiple Threads）</p>
+<p>Registers每个线程私有，延迟最低、容量最小，使用过多会降低并发</p>
+<p>Memory Access Pattern，warp 级访存</p>
+<h2 id="存储关系"><a href="#存储关系" class="headerlink" title="存储关系"></a>存储关系</h2><p>GPU（整张卡）<br>│<br>├── HBM &#x2F; GDDR（显存，主存）<br>│<br>├── L2 Cache（全局缓存，整个 GPU 共享）<br>│<br>└── 多个 SM（Streaming Multiprocessor）<br>    │<br>    ├── L1 Cache   ←┐<br>    ├── Shared Mem ←┘  （同一块片上 SRAM，不同用途）<br>    │<br>    ├── Warp Schedulers<br>    │<br>    ├── Execution Units<br>    │   ├── CUDA Cores<br>    │   ├── Tensor Cores<br>    │   └── SFU<br>    │<br>    └── Registers（寄存器，线程私有）</p>
+<h2 id="线程访问数据"><a href="#线程访问数据" class="headerlink" title="线程访问数据"></a>线程访问数据</h2><p>Thread<br>  ↓<br>Registers（线程私有）<br>  ↓<br>Shared Memory &#x2F; L1 Cache（SM 内）<br>  ↓<br>L2 Cache（全 GPU 共享）<br>  ↓<br>HBM &#x2F; GDDR（显存，主存）</p>
 
                 
             </div>
@@ -622,7 +439,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://hhelloe.github.io/2026/01/27/plan/">http://hhelloe.github.io/2026/01/27/plan/</a>
+                    <a href="http://hhelloe.github.io/2026/02/02/GPU%E7%9A%84%E7%BB%93%E6%9E%84/">http://hhelloe.github.io/2026/02/02/GPU%E7%9A%84%E7%BB%93%E6%9E%84/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -977,9 +794,10 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
                 <a href="/2026/02/02/GPU%E7%9A%84%E7%BB%93%E6%9E%84/">
                     <div class="card-image">
@@ -997,9 +815,9 @@
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2026-02-02
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2026-02-02
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-user fa-fw"></i>
@@ -1008,6 +826,7 @@
                         </span>
                     </div>
                 </div>
+
                 
             </div>
         </div>
@@ -1018,13 +837,13 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2026/01/27/%E8%AE%AD%E7%BB%83%E6%8E%A8%E7%90%86%E4%BC%98%E5%8C%96/">
+                <a href="/2026/01/27/plan/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="训练/推理 优化">
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="">
                         
-                        <span class="card-title">训练/推理 优化</span>
+                        <span class="card-title"></span>
                     </div>
                 </a>
                 <div class="card-content article-content">
