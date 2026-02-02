@@ -411,7 +411,7 @@ GPU的主存为HBM&amp;#x2F;GDDR（显存），存放：模型权重&amp;#x2">
 <p>Warp是由32个线程组成的执行小队，是实际调度与执行的最小单位，SIMT（Single Instruction，Multiple Threads）</p>
 <p>Registers每个线程私有，延迟最低、容量最小，使用过多会降低并发</p>
 <p>Memory Access Pattern，warp 级访存</p>
-<h2 id="存储关系"><a href="#存储关系" class="headerlink" title="存储关系"></a>存储关系</h2><p>GPU（整张卡）<br>│<br>├── HBM &#x2F; GDDR（显存，主存）<br>│<br>├── L2 Cache（全局缓存，整个 GPU 共享）<br>│<br>└── 多个 SM（Streaming Multiprocessor）<br>    │<br>    ├── L1 Cache   ←┐<br>    ├── Shared Mem ←┘  （同一块片上 SRAM，不同用途）<br>    │<br>    ├── Warp Schedulers<br>    │<br>    ├── Execution Units<br>    │   ├── CUDA Cores<br>    │   ├── Tensor Cores<br>    │   └── SFU<br>    │<br>    └── Registers（寄存器，线程私有）</p>
+<h2 id="包含关系图"><a href="#包含关系图" class="headerlink" title="包含关系图"></a>包含关系图</h2><p>GPU（整张卡）<br>│<br>├── HBM &#x2F; GDDR（显存，主存）<br>│<br>├── L2 Cache（全局缓存，整个 GPU 共享）<br>│<br>└── 多个 SM（Streaming Multiprocessor）<br>    │<br>    ├── L1 Cache   ←┐<br>    ├── Shared Mem ←┘  （同一块片上 SRAM，不同用途）<br>    │<br>    ├── Warp Schedulers<br>    │<br>    ├── Execution Units<br>    │   ├── CUDA Cores<br>    │   ├── Tensor Cores<br>    │   └── SFU<br>    │<br>    └── Registers（寄存器，线程私有）</p>
 <h2 id="线程访问数据"><a href="#线程访问数据" class="headerlink" title="线程访问数据"></a>线程访问数据</h2><p>Thread<br>  ↓<br>Registers（线程私有）<br>  ↓<br>Shared Memory &#x2F; L1 Cache（SM 内）<br>  ↓<br>L2 Cache（全 GPU 共享）<br>  ↓<br>HBM &#x2F; GDDR（显存，主存）</p>
 
                 
