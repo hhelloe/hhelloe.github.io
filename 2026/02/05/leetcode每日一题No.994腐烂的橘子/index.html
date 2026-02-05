@@ -4,11 +4,10 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="leetcode每日一题No.200岛屿数量, blog of hhelloe">
-    <meta name="description" content="200.岛屿数量给你一个由 ‘1’（陆地）和 ‘0’（水）组成的的二维网格，请你计算网格中岛屿的数量。
-岛屿总是被水包围，并且每座岛屿只能由水平方向和&amp;#x2F;或竖直方向上相邻的陆地连接形成。
-此外，你可以假设该网格的四条边均被水包围。
-">
+    <meta name="keywords" content="leetcode每日一题No.994腐烂的橘子, blog of hhelloe">
+    <meta name="description" content="994.腐烂的橘子在给定的 m x n 网格 grid 中，每个单元格可以有以下三个值之一：
+值 0 代表空单元格；值 1 代表新鲜橘子；值 2 代表腐烂的橘子。每分钟，腐烂的橘子 周围 4 个方向上相邻 的新鲜橘子都会腐烂。
+返回 直到单">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -20,7 +19,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>leetcode每日一题No.200岛屿数量 | blog of hhelloe</title>
+    <title>leetcode每日一题No.994腐烂的橘子 | blog of hhelloe</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -335,12 +334,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/5.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/0.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">leetcode每日一题No.200岛屿数量</h1>
+                    <h1 class="description center-align post-title">leetcode每日一题No.994腐烂的橘子</h1>
                 </div>
             </div>
         </div>
@@ -385,7 +384,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2026-02-04
+                    2026-02-05
                 </div>
                 
 
@@ -406,16 +405,16 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h1 id="200-岛屿数量"><a href="#200-岛屿数量" class="headerlink" title="200.岛屿数量"></a>200.岛屿数量</h1><p>给你一个由 ‘1’（陆地）和 ‘0’（水）组成的的二维网格，请你计算网格中岛屿的数量。</p>
-<p>岛屿总是被水包围，并且每座岛屿只能由水平方向和&#x2F;或竖直方向上相邻的陆地连接形成。</p>
-<p>此外，你可以假设该网格的四条边均被水包围。</p>
-<p>示例 1：</p>
-<p>输入：grid &#x3D; [<br>  [‘1’,’1’,’1’,’1’,’0’],<br>  [‘1’,’1’,’0’,’1’,’0’],<br>  [‘1’,’1’,’0’,’0’,’0’],<br>  [‘0’,’0’,’0’,’0’,’0’]<br>]<br>输出：1<br>示例 2：</p>
-<p>输入：grid &#x3D; [<br>  [‘1’,’1’,’0’,’0’,’0’],<br>  [‘1’,’1’,’0’,’0’,’0’],<br>  [‘0’,’0’,’1’,’0’,’0’],<br>  [‘0’,’0’,’0’,’1’,’1’]<br>]<br>输出：3</p>
-<h2 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h2><p>用深搜&#x2F;广搜从小岛的某一点扩散出去把每个部分都置为0，完成这样的一次操作就给岛屿计数器更新+1，然后遍历一遍即可</p>
-<h2 id="python实现"><a href="#python实现" class="headerlink" title="python实现"></a>python实现</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">numIslands</span>(<span class="params">self, grid: <span class="type">List</span>[<span class="type">List</span>[<span class="built_in">str</span>]]</span>) -&gt; <span class="built_in">int</span>:</span><br><span class="line">        m = <span class="built_in">len</span>(grid)</span><br><span class="line">        n = <span class="built_in">len</span>(grid[<span class="number">0</span>])</span><br><span class="line">        ans = <span class="number">0</span></span><br><span class="line">        <span class="keyword">def</span> <span class="title function_">expand</span>(<span class="params">y:<span class="built_in">int</span> , x:<span class="built_in">int</span></span>) :</span><br><span class="line">        <span class="comment">#递归深搜,输入一个坐标然后把整个小岛都扩散一遍，一边扩散一边把1置0</span></span><br><span class="line">            <span class="comment"># 边界条件</span></span><br><span class="line">            <span class="keyword">if</span> y &lt; <span class="number">0</span> <span class="keyword">or</span> y &gt; m - <span class="number">1</span> <span class="keyword">or</span> x &lt; <span class="number">0</span> <span class="keyword">or</span> x &gt; n - <span class="number">1</span> <span class="keyword">or</span> grid[y][x] == <span class="string">&quot;0&quot;</span>:</span><br><span class="line">                <span class="keyword">return</span>  </span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                grid[y][x] = <span class="string">&quot;0&quot;</span></span><br><span class="line">                expand(y-<span class="number">1</span>,x)</span><br><span class="line">                expand(y+<span class="number">1</span>,x)</span><br><span class="line">                expand(y,x-<span class="number">1</span>)</span><br><span class="line">                expand(y,x+<span class="number">1</span>)</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(m):</span><br><span class="line">            <span class="keyword">for</span> j <span class="keyword">in</span> <span class="built_in">range</span>(n):</span><br><span class="line">                <span class="keyword">if</span> grid[i][j] == <span class="string">&quot;1&quot;</span>:</span><br><span class="line">                    expand(i,j)</span><br><span class="line">                    ans += <span class="number">1</span></span><br><span class="line">        <span class="keyword">return</span> ans</span><br></pre></td></tr></table></figure>
+                <h1 id="994-腐烂的橘子"><a href="#994-腐烂的橘子" class="headerlink" title="994.腐烂的橘子"></a>994.腐烂的橘子</h1><p>在给定的 m x n 网格 grid 中，每个单元格可以有以下三个值之一：</p>
+<p>值 0 代表空单元格；<br>值 1 代表新鲜橘子；<br>值 2 代表腐烂的橘子。<br>每分钟，腐烂的橘子 周围 4 个方向上相邻 的新鲜橘子都会腐烂。</p>
+<p>返回 直到单元格中没有新鲜橘子为止所必须经过的最小分钟数。如果不可能，返回 -1 。</p>
+<p>输入：grid &#x3D; [[2,1,1],[1,1,0],[0,1,1]]<br>输出：4<br>示例 2：</p>
+<p>输入：grid &#x3D; [[2,1,1],[0,1,1],[1,0,1]]<br>输出：-1<br>解释：左下角的橘子（第 2 行， 第 0 列）永远不会腐烂，因为腐烂只会发生在 4 个方向上。<br>示例 3：</p>
+<p>输入：grid &#x3D; [[0,2]]<br>输出：0<br>解释：因为 0 分钟时已经没有新鲜橘子了，所以答案就是 0 。</p>
+<h2 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h2><p>用广搜，每个腐烂的橘子一起搜，搜一轮time+1，常见用队列实现，我这里的方法没有用队列但原理相同</p>
+<h2 id="python实现"><a href="#python实现" class="headerlink" title="python实现"></a>python实现</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">orangesRotting</span>(<span class="params">self, grid: <span class="type">List</span>[<span class="type">List</span>[<span class="built_in">int</span>]]</span>) -&gt; <span class="built_in">int</span>:</span><br><span class="line">        m = <span class="built_in">len</span>(grid)</span><br><span class="line">        n = <span class="built_in">len</span>(grid[<span class="number">0</span>])</span><br><span class="line">        <span class="comment">#两个集合记录腐烂和新鲜的橘子</span></span><br><span class="line">        rotten = &#123;(i,j) <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(m) <span class="keyword">for</span> j <span class="keyword">in</span> <span class="built_in">range</span>(n) <span class="keyword">if</span> grid[i][j] == <span class="number">2</span>&#125;</span><br><span class="line">        fresh = &#123;(i,j) <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(m) <span class="keyword">for</span> j <span class="keyword">in</span> <span class="built_in">range</span>(n) <span class="keyword">if</span> grid[i][j] == <span class="number">1</span>&#125;</span><br><span class="line"></span><br><span class="line">        time = <span class="number">0</span></span><br><span class="line">        <span class="comment">#下面只记录当前时间会腐烂的橘子，已经把腐烂扩散过的橘子拿出去</span></span><br><span class="line">        <span class="keyword">while</span> fresh:</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> rotten: <span class="keyword">return</span> -<span class="number">1</span></span><br><span class="line">            rotten = &#123;(i + di,j + dj) <span class="keyword">for</span> i,j <span class="keyword">in</span> rotten <span class="keyword">for</span> di,dj <span class="keyword">in</span> [(<span class="number">0</span>,<span class="number">1</span>),(<span class="number">0</span>,-<span class="number">1</span>),(<span class="number">1</span>,<span class="number">0</span>),(-<span class="number">1</span>,<span class="number">0</span>)] <span class="keyword">if</span> (i + di,j+dj) <span class="keyword">in</span> fresh&#125;</span><br><span class="line">            fresh -= rotten</span><br><span class="line">            time += <span class="number">1</span></span><br><span class="line">        <span class="keyword">return</span> time</span><br></pre></td></tr></table></figure>
 
-<h2 id="cpp实现"><a href="#cpp实现" class="headerlink" title="cpp实现"></a>cpp实现</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"># 基本上和python实现思路相同，只是我为了熟悉写cpp所以又写了一遍</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">int</span> <span class="title">numIslands</span><span class="params">(vector&lt;vector&lt;<span class="type">char</span>&gt;&gt;&amp; grid)</span> </span>&#123;</span><br><span class="line">        <span class="type">int</span> m = grid.<span class="built_in">size</span>();</span><br><span class="line">        <span class="type">int</span> n = grid[<span class="number">0</span>].<span class="built_in">size</span>();</span><br><span class="line">        <span class="type">int</span> ans = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">auto</span> expand = [&amp;](<span class="keyword">this</span> <span class="keyword">auto</span>&amp;&amp; expand, <span class="type">int</span> y, <span class="type">int</span> x) &#123;</span><br><span class="line">            <span class="keyword">if</span> (y &lt; <span class="number">0</span> || y &gt;= m || x &lt; <span class="number">0</span> || x &gt;= n || grid[y][x] == <span class="string">&#x27;0&#x27;</span>)</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">            grid[y][x] = <span class="string">&#x27;0&#x27;</span>;</span><br><span class="line">            <span class="built_in">expand</span>(y - <span class="number">1</span>, x);</span><br><span class="line">            <span class="built_in">expand</span>(y + <span class="number">1</span>, x);</span><br><span class="line">            <span class="built_in">expand</span>(y, x - <span class="number">1</span>);</span><br><span class="line">            <span class="built_in">expand</span>(y, x + <span class="number">1</span>);</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; m; ++i) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="type">int</span> j = <span class="number">0</span>; j &lt; n; ++j) &#123;</span><br><span class="line">                <span class="keyword">if</span> (grid[i][j] == <span class="string">&#x27;1&#x27;</span>) &#123;</span><br><span class="line">                    <span class="built_in">expand</span>(i, j);</span><br><span class="line">                    ++ans;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> ans;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">int</span> <span class="title">orangesRotting</span><span class="params">(vector&lt;vector&lt;<span class="type">int</span>&gt;&gt;&amp; grid)</span> </span>&#123;</span><br><span class="line">        <span class="string">&#x27;初始化fresh水果个数fresh，腐烂水果坐标存进队列q，时间初始化为min=0&#x27;</span></span><br><span class="line">        <span class="type">int</span> min = <span class="number">0</span>, fresh = <span class="number">0</span>;</span><br><span class="line">        queue&lt;pair&lt;<span class="type">int</span>,<span class="type">int</span>&gt;&gt; q;</span><br><span class="line">        <span class="keyword">for</span>(<span class="type">int</span> i=<span class="number">0</span>;i&lt;grid.<span class="built_in">size</span>();i++)&#123;</span><br><span class="line">            <span class="keyword">for</span>(<span class="type">int</span> j=<span class="number">0</span>;j&lt;grid[<span class="number">0</span>].<span class="built_in">size</span>();j++)&#123;</span><br><span class="line">                <span class="keyword">if</span>(grid[i][j] == <span class="number">1</span>) fresh++;</span><br><span class="line">                <span class="keyword">else</span> <span class="keyword">if</span>(grid[i][j]==<span class="number">2</span>) q.<span class="built_in">push</span>(&#123;i,j&#125;);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        vector&lt;pair&lt;<span class="type">int</span>,<span class="type">int</span>&gt;&gt; dirs = &#123;&#123;<span class="number">-1</span>,<span class="number">0</span>&#125;,&#123;<span class="number">1</span>,<span class="number">0</span>&#125;,&#123;<span class="number">0</span>,<span class="number">-1</span>&#125;,&#123;<span class="number">0</span>,<span class="number">1</span>&#125;&#125;;</span><br><span class="line"></span><br><span class="line">        <span class="string">&#x27;腐烂橘子队列释放一位，然后扩散周围新鲜橘子，如果有扩散就给rotten标记为1</span></span><br><span class="line"><span class="string">        rotten为1情况下完整扩散一次后给min+1，最后执行一次是否剩余fresh橘子的判断&#x27;</span></span><br><span class="line">        <span class="keyword">while</span>(!q.<span class="built_in">empty</span>())&#123;</span><br><span class="line">            <span class="type">int</span> n = q.<span class="built_in">size</span>();</span><br><span class="line">            <span class="type">bool</span> rotten = <span class="literal">false</span>;</span><br><span class="line">            <span class="keyword">for</span>(<span class="type">int</span> i =<span class="number">0</span>;i&lt;n;i++)&#123;</span><br><span class="line">                <span class="keyword">auto</span> x = q.<span class="built_in">front</span>();</span><br><span class="line">                q.<span class="built_in">pop</span>();</span><br><span class="line">                <span class="keyword">for</span>(<span class="keyword">auto</span> cur:dirs)&#123;</span><br><span class="line">                    <span class="type">int</span> i = x.first + cur.first;</span><br><span class="line">                    <span class="type">int</span> j = x.second + cur.second;</span><br><span class="line">                    <span class="keyword">if</span>(i&gt;=<span class="number">0</span> &amp;&amp; i&lt;grid.<span class="built_in">size</span>() &amp;&amp; j&gt;=<span class="number">0</span> &amp;&amp; j&lt;grid[<span class="number">0</span>].<span class="built_in">size</span>() &amp;&amp; grid[i][j] == <span class="number">1</span>)&#123;</span><br><span class="line">                        grid[i][j] = <span class="number">2</span>;</span><br><span class="line">                        q.<span class="built_in">push</span>(&#123;i,j&#125;);</span><br><span class="line">                        fresh--;</span><br><span class="line">                        rotten = <span class="literal">true</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span>(rotten) min++;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> fresh? <span class="number">-1</span>:min;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
                 
             </div>
             <hr/>
@@ -441,7 +440,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://hhelloe.github.io/2026/02/04/leetcode%E6%AF%8F%E6%97%A5%E4%B8%80%E9%A2%98No.200%E5%B2%9B%E5%B1%BF%E6%95%B0%E9%87%8F/">http://hhelloe.github.io/2026/02/04/leetcode%E6%AF%8F%E6%97%A5%E4%B8%80%E9%A2%98No.200%E5%B2%9B%E5%B1%BF%E6%95%B0%E9%87%8F/</a>
+                    <a href="http://hhelloe.github.io/2026/02/05/leetcode%E6%AF%8F%E6%97%A5%E4%B8%80%E9%A2%98No.994%E8%85%90%E7%83%82%E7%9A%84%E6%A9%98%E5%AD%90/">http://hhelloe.github.io/2026/02/05/leetcode%E6%AF%8F%E6%97%A5%E4%B8%80%E9%A2%98No.994%E8%85%90%E7%83%82%E7%9A%84%E6%A9%98%E5%AD%90/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -796,9 +795,52 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
+            <div class="card">
+                <a href="/2026/02/05/leetcode%E6%AF%8F%E6%97%A5%E4%B8%80%E9%A2%98No.994%E8%85%90%E7%83%82%E7%9A%84%E6%A9%98%E5%AD%90/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="leetcode每日一题No.994腐烂的橘子">
+                        
+                        <span class="card-title">leetcode每日一题No.994腐烂的橘子</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2026-02-05
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/%E7%AE%97%E6%B3%95%E9%A2%98/" class="post-category">
+                                    算法题
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
             <div class="card">
                 <a href="/2026/02/05/%E8%AE%A1%E7%AE%97%E7%AB%9E%E8%B5%9B/">
                     <div class="card-image">
@@ -816,45 +858,8 @@
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2026-02-05
-                        </span>
-                        <span class="publish-author">
-                            
-                            <i class="fas fa-user fa-fw"></i>
-                            Austin
-                            
-                        </span>
-                    </div>
-                </div>
-                
-            </div>
-        </div>
-        
-        
-        <div class="article col s12 m6" data-aos="fade-up">
-            <div class="article-badge right-badge text-color">
-                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
-            </div>
-            <div class="card">
-                <a href="/2026/02/02/GPU%E7%9A%84%E7%BB%93%E6%9E%84/">
-                    <div class="card-image">
-                        
-                        
-                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="GPU结构">
-                        
-                        <span class="card-title">GPU结构</span>
-                    </div>
-                </a>
-                <div class="card-content article-content">
-                    <div class="summary block-with-text">
-                        
-                            
-                        
-                    </div>
-                    <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2026-02-02
+                                <i class="far fa-clock fa-fw icon-date"></i>2026-02-05
                             </span>
                         <span class="publish-author">
                             
