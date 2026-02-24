@@ -4,12 +4,13 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="roofline模型, blog of hhelloe">
-    <meta name="description" content="roofline是一种做性能分析的模型差不多是：min(算力，带宽×操作强度)
-算力指每秒能做多少浮点数运算
-带宽指每秒能搬运多少浮点数
-操作强度指一个浮点数需要做多少运算
-于是画图，横轴为操作强度，带宽假设恒定，算力恒定，就会出现类似“厂">
+    <meta name="keywords" content="online softmax论文解读, blog of hhelloe">
+    <meta name="description" content="softmax进化Naive Softmax
+d₀ ← 0  
+for j &amp;#x3D; 1 to V do  
+&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;dⱼ ← dⱼ₋₁ + e^(xⱼ)  
+end for  
+for i &amp;#">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -21,7 +22,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>roofline模型 | blog of hhelloe</title>
+    <title>online softmax论文解读 | blog of hhelloe</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -336,12 +337,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/6.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/18.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">roofline模型</h1>
+                    <h1 class="description center-align post-title">online softmax论文解读</h1>
                 </div>
             </div>
         </div>
@@ -369,6 +370,15 @@
                     
                 </div>
                 <div class="col s5 right-align">
+                    
+                    <div class="post-cate">
+                        <i class="fas fa-bookmark fa-fw icon-category"></i>
+                        
+                            <a href="/categories/%E6%8A%80%E6%9C%AF%E8%A7%A3%E8%AF%BB/" class="post-category">
+                                技术解读
+                            </a>
+                        
+                    </div>
                     
                 </div>
             </div>
@@ -398,11 +408,62 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h2 id="roofline是一种做性能分析的模型"><a href="#roofline是一种做性能分析的模型" class="headerlink" title="roofline是一种做性能分析的模型"></a>roofline是一种做性能分析的模型</h2><p>差不多是：<br>min(算力，带宽×操作强度)</p>
-<p>算力指每秒能做多少浮点数运算</p>
-<p>带宽指每秒能搬运多少浮点数</p>
-<p>操作强度指一个浮点数需要做多少运算</p>
-<p>于是画图，横轴为操作强度，带宽假设恒定，算力恒定，就会出现类似“厂”的分段函数图，斜线上为memory-bound,横线上为compute-bound</p>
+                <h1 id="softmax进化"><a href="#softmax进化" class="headerlink" title="softmax进化"></a>softmax进化</h1><h3 id="Naive-Softmax"><a href="#Naive-Softmax" class="headerlink" title="Naive Softmax"></a>Naive Softmax</h3><ol>
+<li>d₀ ← 0  </li>
+<li><strong>for</strong> j &#x3D; 1 to V <strong>do</strong>  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;dⱼ ← dⱼ₋₁ + e^(xⱼ)  </li>
+<li><strong>end for</strong>  </li>
+<li><strong>for</strong> i &#x3D; 1 to V <strong>do</strong>  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;yᵢ ← e^(xᵢ) &#x2F; d_V  </li>
+<li><strong>end for</strong></li>
+</ol>
+<h3 id="Safe-spftmax"><a href="#Safe-spftmax" class="headerlink" title="Safe spftmax"></a>Safe spftmax</h3><ol>
+<li>m₀ ← −∞  </li>
+<li><strong>for</strong> k &#x3D; 1 to V <strong>do</strong>  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;mₖ ← max(mₖ₋₁, xₖ)  </li>
+<li><strong>end for</strong>  </li>
+<li>d₀ ← 0  </li>
+<li><strong>for</strong> j &#x3D; 1 to V <strong>do</strong>  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;dⱼ ← dⱼ₋₁ + e^(xⱼ − m_V)  </li>
+<li><strong>end for</strong>  </li>
+<li><strong>for</strong> i &#x3D; 1 to V <strong>do</strong>  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;yᵢ ← e^(xᵢ − m_V) &#x2F; d_V  </li>
+<li><strong>end for</strong></li>
+</ol>
+<h3 id="Safe-softmax-with-online-normalizer-calculation"><a href="#Safe-softmax-with-online-normalizer-calculation" class="headerlink" title="Safe softmax with online normalizer calculation"></a>Safe softmax with online normalizer calculation</h3><ol>
+<li>m₀ ← −∞  </li>
+<li>d₀ ← 0  </li>
+<li><strong>for</strong> j &#x3D; 1 to V <strong>do</strong>  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;mⱼ ← max(mⱼ₋₁, xⱼ)  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;dⱼ ← dⱼ₋₁ × e^(mⱼ₋₁ − mⱼ) + e^(xⱼ − mⱼ)  </li>
+<li><strong>end for</strong>  </li>
+<li><strong>for</strong> i &#x3D; 1 to V <strong>do</strong>  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;yᵢ ← e^(xᵢ − m_V) &#x2F; d_V  </li>
+<li><strong>end for</strong></li>
+</ol>
+<h3 id="Online-softmax-and-top-k"><a href="#Online-softmax-and-top-k" class="headerlink" title="Online softmax and top-k"></a>Online softmax and top-k</h3><ol>
+<li>m₀ ← −∞  </li>
+<li>d₀ ← 0  </li>
+<li>u ← {−∞, −∞, …, −∞}ᵀ , u ∈ ℝ^(K+1)    ⊲ 前 K 个元素保存当前 TopK 值  </li>
+<li>p ← {−1, −1, …, −1}ᵀ , p ∈ ℤ^(K+1)    ⊲ 保存对应索引  </li>
+<li><strong>for</strong> j &#x3D; 1 to V <strong>do</strong>  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;mⱼ ← max(mⱼ₋₁, xⱼ)  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;dⱼ ← dⱼ₋₁ × e^(mⱼ₋₁ − mⱼ) + e^(xⱼ − mⱼ)  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;uₖ₊₁ ← xⱼ     ⊲ 将当前值放入第 K+1 个位置  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;pₖ₊₁ ← j     ⊲ 保存其索引  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;k ← K      ⊲ 对 u 做降序插入排序（前 K 个已有序）  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;<strong>while</strong> k ≥ 1 and uₖ &lt; uₖ₊₁ <strong>do</strong>  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;swap(uₖ, uₖ₊₁)  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;swap(pₖ, pₖ₊₁)  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;k ← k − 1  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;<strong>end while</strong>  </li>
+<li><strong>end for</strong></li>
+<li><strong>for</strong> i &#x3D; 1 to K <strong>do</strong>  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;vᵢ ← e^(uᵢ − m_V) &#x2F; d_V  </li>
+<li>&nbsp;&nbsp;&nbsp;&nbsp;zᵢ ← pᵢ  </li>
+<li><strong>end for</strong></li>
+</ol>
+<h2 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h2><p>作者在论文中还证明了online safe softmax可以在gpu中并行运行</p>
 
                 
             </div>
@@ -429,7 +490,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://hhelloe.github.io/2026/02/24/roofline/">http://hhelloe.github.io/2026/02/24/roofline/</a>
+                    <a href="http://hhelloe.github.io/2026/02/24/online%20softmax%E8%AE%BA%E6%96%87%E8%A7%A3%E8%AF%BB/">http://hhelloe.github.io/2026/02/24/online%20softmax%E8%AE%BA%E6%96%87%E8%A7%A3%E8%AF%BB/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -784,9 +845,10 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
                 <a href="/2026/02/24/online%20softmax%E8%AE%BA%E6%96%87%E8%A7%A3%E8%AF%BB/">
                     <div class="card-image">
@@ -804,9 +866,9 @@
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2026-02-24
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2026-02-24
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
@@ -819,6 +881,7 @@
                         </span>
                     </div>
                 </div>
+
                 
             </div>
         </div>
@@ -829,13 +892,13 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2026/02/05/leetcode%E6%AF%8F%E6%97%A5%E4%B8%80%E9%A2%98No.994%E8%85%90%E7%83%82%E7%9A%84%E6%A9%98%E5%AD%90/">
+                <a href="/2026/02/24/roofline/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="leetcode每日一题No.994腐烂的橘子">
+                        <img src="/medias/featureimages/6.jpg" class="responsive-img" alt="roofline模型">
                         
-                        <span class="card-title">leetcode每日一题No.994腐烂的橘子</span>
+                        <span class="card-title">roofline模型</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -846,16 +909,12 @@
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2026-02-05
+                                <i class="far fa-clock fa-fw icon-date"></i>2026-02-24
                             </span>
                         <span class="publish-author">
                             
-                            <i class="fas fa-bookmark fa-fw icon-category"></i>
-                            
-                            <a href="/categories/%E7%AE%97%E6%B3%95%E9%A2%98/" class="post-category">
-                                    算法题
-                                </a>
-                            
+                            <i class="fas fa-user fa-fw"></i>
+                            Austin
                             
                         </span>
                     </div>
